@@ -1,0 +1,9 @@
+project: insurgent-example
+version: 0.0.1
+language: c++
+compiler: clang++
+flags: "-O2 -Wall"
+project_dirs:
+- sources
+project_type: executable
+output: binaries/insurgent-example
