@@ -4,6 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "insurgent"
+version = "0.1.0"
 description = "A build environment and dev shell for make-based C/C++ projects."
 authors = [
     { name = "bumblebee777", email = "bumbelbee437167@gmail.com" }
@@ -11,7 +12,7 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-dynamic = ["version", "dependencies"]
+dynamic = ["dependencies"]
 
 [project.scripts]
 insurgent = "insurgent:main"
@@ -21,7 +22,6 @@ int = "insurgent:main"
 packages = ["insurgent"]
 
 [tool.setuptools.dynamic]
-version = { attr = "insurgent.version.version" }
 dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools.package-data]

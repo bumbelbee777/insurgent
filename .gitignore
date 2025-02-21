@@ -1,2 +1,4 @@
 dist/
 insurgent.egg-info/
+*.pyc
+__pycache__/

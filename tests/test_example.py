@@ -1,6 +1,5 @@
 import os
 from insurgent import build, load_config
-from insurgent.logger import error
 
 def test_example():
     os.chdir("../example")

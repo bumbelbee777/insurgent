@@ -1,5 +1,5 @@
 import os
-from terminal import *
+from insurgent.Logging.terminal import *
 
 def write_to_log_file(message):
     log_file_path = os.path.join(os.path.dirname(__file__), "../build.log")

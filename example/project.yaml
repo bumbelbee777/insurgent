@@ -1,8 +1,10 @@
 project: insurgent-example
+description: An example project demonstrating InsurgeNT.
 version: 0.0.1
 language: c++
+standard: c++20
 compiler: clang++
-flags: "-O2 -Wall"
+compiler_flags: "-O2 -Wall"
 project_dirs:
 - sources
 project_type: executable

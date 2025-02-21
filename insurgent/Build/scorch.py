@@ -1,8 +1,8 @@
 import os
 import subprocess
-from config import load_config
-from logger import log, error
-from terminal import *
+from insurgent.Meta.config import load_config
+from insurgent.Logging.logger import log, error
+from insurgent.Logging.terminal import *
 
 def scorch_src_tree():
     config = load_config()
@@ -26,6 +26,6 @@ def scorch_src_tree():
         if result.stderr.strip():
             error(result.stderr.strip())
 
-        log(f"{GREEN}✔ Successfully cleaned the build artifacts using '{clean_rule}'{RESET}")
+        log(f"{GREEN}✔ Successfully scorched source tree using '{clean_rule}'{RESET}")
     except subprocess.CalledProcessError as e:
         error(f"Make clean failed: {e.stderr.strip()}")

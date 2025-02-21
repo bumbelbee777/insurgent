@@ -1,10 +1,16 @@
-from terminal import *
+import sys
+import os
+from insurgent.Logging.terminal import *
 
-version = "0.1"
+root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if root not in sys.path:
+    sys.path.insert(0, root)
+
+VERSION = "0.1.0"
 
 def about():
     print(f"		{CYAN}{BOLD}✦ InsurgeNT ✦{RESET}")
-    print(f"	{GREEN}Integrated Native Toolkit version {version}{RESET}")
+    print(f"	{GREEN}Integrated Native Toolkit version {VERSION}{RESET}")
     print(f"	{YELLOW}InsurgeNT is a build environment for C/C++ projects, aimed for user-friendliness and compactness.{RESET}")
     print()
 

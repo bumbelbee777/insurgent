@@ -1,4 +1,4 @@
-from shell import *
+from insurgent.Shell.shell import *
 
 def main():
     shell()
