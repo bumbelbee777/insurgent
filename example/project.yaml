@@ -1,11 +1,28 @@
 project: insurgent-example
-description: An example project demonstrating InsurgeNT.
-version: 0.0.1
+description: An example project demonstrating InsurgeNT's make-independent build system.
+authors: InsurgeNT Team
+license: MIT
+version: 0.1.0
 language: c++
 standard: c++20
-compiler: clang++
-compiler_flags: "-O2 -Wall"
+compiler: g++
+compiler_flags:
+  global: "-fPIC"
+  common: "-O2 -Wall -Wextra"
+  cpp: "-std=c++20"
+  ld: "-lstdc++"
 project_dirs:
-- sources
+  - sources
 project_type: executable
 output: binaries/insurgent-example
+
+# Optional bootstrap configuration
+bootstrap:
+  task: prepare
+  command: "if not exist binaries mkdir binaries"
+
+# Example of subprojects (not used in this example)
+subprojects: []
+
+# No files to ignore
+ignore: []

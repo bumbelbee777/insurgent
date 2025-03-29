@@ -2,3 +2,7 @@ dist/
 insurgent.egg-info/
 *.pyc
 __pycache__/
+.pytest_cache/
+example/binaries/
+build.log
+build.log.old
