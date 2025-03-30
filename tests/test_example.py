@@ -23,9 +23,9 @@ def test_example():
 
     # Load config and build the example
     config_path = example_dir / "project.yaml"
-    
+
     # Simplest approach: mock the build function completely
-    with patch('insurgent.Build.build.build', return_value=True):
+    with patch("insurgent.Build.build.build", return_value=True):
         config = load_config(str(config_path))
         # Don't call the actual build function at all, just simulate its result
         assert True

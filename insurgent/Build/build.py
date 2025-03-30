@@ -88,11 +88,14 @@ def build(project, config=None, options=None):
                 if os.path.exists(config_path):
                     config = load_config(config_path)
                 else:
-                    # If we don't find one in the current directory, 
+                    # If we don't find one in the current directory,
                     # check if this is a sources directory with a parent containing project.yaml
                     parent_dir = os.path.dirname(project_dir)
                     parent_config_path = os.path.join(parent_dir, "project.yaml")
-                    if os.path.exists(parent_config_path) and os.path.basename(project_dir) == "sources":
+                    if (
+                        os.path.exists(parent_config_path)
+                        and os.path.basename(project_dir) == "sources"
+                    ):
                         info(f"Found project.yaml in parent directory {parent_dir}")
                         project_dir = parent_dir
                         config = load_config(parent_config_path)
@@ -108,7 +111,7 @@ def build(project, config=None, options=None):
         if verbose:
             project_info = engine.get_project_info()
             log(f"Building project: {project_info['name']} v{project_info['version']}")
-            if 'description' in project_info:
+            if "description" in project_info:
                 log(f"Description: {project_info.get('description', 'No description')}")
             if "authors" in project_info and project_info["authors"]:
                 if isinstance(project_info["authors"], list):
@@ -127,14 +130,16 @@ def build(project, config=None, options=None):
         # Create an event loop and run the coroutine
         try:
             # Use asyncio.run for Python 3.7+ to properly manage the event loop
-            result = asyncio.run(_build_async(
-                engine,
-                component,
-                incremental,
-                multi_threaded=True,  # Always multi-threaded
-                silent=silent,
-                build_subprojects=not no_subprojects,  # Build subprojects unless explicitly disabled
-            ))
+            result = asyncio.run(
+                _build_async(
+                    engine,
+                    component,
+                    incremental,
+                    multi_threaded=True,  # Always multi-threaded
+                    silent=silent,
+                    build_subprojects=not no_subprojects,  # Build subprojects unless explicitly disabled
+                )
+            )
             return result
         except Exception as e:
             error(f"Error during asyncio execution: {str(e)}")
@@ -199,10 +204,12 @@ def clean(project=None, config=None, options=None):
         # Create an event loop and run the coroutine
         try:
             # Use asyncio.run for Python 3.7+ to properly manage the event loop
-            result = asyncio.run(_clean_async(
-                engine,
-                clean_subprojects=not no_subprojects,  # Clean subprojects unless explicitly disabled
-            ))
+            result = asyncio.run(
+                _clean_async(
+                    engine,
+                    clean_subprojects=not no_subprojects,  # Clean subprojects unless explicitly disabled
+                )
+            )
             return result
         except Exception as e:
             error(f"Error during asyncio execution: {str(e)}")
@@ -253,19 +260,19 @@ def _ensure_coroutine_awaited(coro):
     """
     Helper function to ensure coroutines are properly handled.
     This prevents unhandled coroutine warnings in tests.
-    
+
     Args:
         coro: Coroutine object
-        
+
     Returns:
         Result from coroutine execution
     """
     import asyncio
-    
+
     # If the coroutine is already a result (not a coroutine), return it
     if not asyncio.iscoroutine(coro):
         return coro
-        
+
     # Try to use asyncio.run which handles the event loop properly
     try:
         return asyncio.run(coro)

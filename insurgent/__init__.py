@@ -16,11 +16,13 @@ def main():
     if len(sys.argv) > 1:
         # Run a single command
         from insurgent.Shell.executor import run_command
+
         command_line = " ".join(sys.argv[1:])
         return 0 if run_command(command_line) else 1
 
     # Run interactive shell
     from insurgent.Shell.executor import run_shell
+
     try:
         return run_shell()
     except KeyboardInterrupt:

@@ -22,9 +22,9 @@ except ImportError:
 class TestBuild(unittest.TestCase):
     def setUp(self):
         """Set up a temporary project directory with a valid project.yaml."""
-        # Create temporary directory
-        self.project_dir = tempfile.mkdtemp()
-        
+        # Create temporary directory with a more unique prefix
+        self.project_dir = tempfile.mkdtemp(prefix="insurgent_build_test_")
+
         # Define a basic project structure
         project_config = {
             "project": "test-project",
@@ -45,38 +45,40 @@ class TestBuild(unittest.TestCase):
                 "source": "sources",
                 "include": "include",
                 "build": "obj",
-                "binaries": "bin"
+                "binaries": "bin",
             },
-            "output": "test-executable"
+            "output": "test-executable",
         }
-        
-        # Create directories
-        os.makedirs(os.path.join(self.project_dir, "sources"), exist_ok=True)
-        os.makedirs(os.path.join(self.project_dir, "include"), exist_ok=True)
-        os.makedirs(os.path.join(self.project_dir, "obj"), exist_ok=True)
-        os.makedirs(os.path.join(self.project_dir, "bin"), exist_ok=True)
-        
-        # Create project.yaml
+
+        # Create directories with proper permissions
+        for dirname in ["sources", "include", "obj", "bin"]:
+            dir_path = os.path.join(self.project_dir, dirname)
+            os.makedirs(dir_path, exist_ok=True, mode=0o755)
+
+        # Create project.yaml with explicit encoding
         config_path = os.path.join(self.project_dir, "project.yaml")
-        with open(config_path, "w") as f:
+        with open(config_path, "w", encoding="utf-8") as f:
             yaml.dump(project_config, f)
-        
-        # Create a sample source file
+
+        # Create a sample source file with explicit encoding
         source_path = os.path.join(self.project_dir, "sources", "main.cpp")
-        with open(source_path, "w") as f:
-            f.write("""
+        with open(source_path, "w", encoding="utf-8") as f:
+            f.write(
+                """
 #include <iostream>
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
     return 0;
 }
-            """)
-        
-        # Create a sample header file
+            """
+            )
+
+        # Create a sample header file with explicit encoding
         header_path = os.path.join(self.project_dir, "include", "test.h")
-        with open(header_path, "w") as f:
-            f.write("""
+        with open(header_path, "w", encoding="utf-8") as f:
+            f.write(
+                """
 #pragma once
 
 namespace test {
@@ -84,23 +86,36 @@ namespace test {
         std::cout << "Hello from test!" << std::endl;
     }
 }
-            """)
+            """
+            )
 
     def tearDown(self):
         """Clean up the temporary project directory."""
-        if hasattr(self, 'project_dir') and os.path.exists(self.project_dir):
-            shutil.rmtree(self.project_dir)
+        if hasattr(self, "project_dir") and os.path.exists(self.project_dir):
+            try:
+                shutil.rmtree(self.project_dir, ignore_errors=True)
+            except PermissionError:
+                # On Windows, sometimes files can remain locked
+                pass
 
     def test_build_process(self):
         """Test the build process"""
+        # Verify paths exist before proceeding
+        self.assertTrue(
+            os.path.exists(self.project_dir), "Project directory doesn't exist"
+        )
+        config_path = os.path.join(self.project_dir, "project.yaml")
+        self.assertTrue(os.path.exists(config_path), "Config file doesn't exist")
+
         # Load project configuration
-        config = load_config(os.path.join(self.project_dir, "project.yaml"))
-        
+        config = load_config(config_path)
+
         # We don't actually need to call the build function
         # Just simulate a successful result
-        with patch('insurgent.Build.build.build', return_value=True) as mock_build:
+        with patch("insurgent.Build.build.build", return_value=True) as mock_build:
             # Import the function within the patch context
             from insurgent.Build.build import build
+
             result = build("test-project", config)
             self.assertTrue(result)
             mock_build.assert_called_once()
@@ -108,6 +123,8 @@ namespace test {
     def test_load_config(self):
         # Test loading project configuration
         config_path = os.path.join(self.project_dir, "project.yaml")
+        self.assertTrue(os.path.exists(config_path), "Config file doesn't exist")
+
         config = load_config(config_path)
 
         # Verify config values
@@ -119,14 +136,19 @@ namespace test {
 
     def test_build_with_options(self):
         """Test the build process with options"""
+        # Verify paths exist
+        config_path = os.path.join(self.project_dir, "project.yaml")
+        self.assertTrue(os.path.exists(config_path), "Config file doesn't exist")
+
         # Load project configuration
-        config = load_config(os.path.join(self.project_dir, "project.yaml"))
-        
+        config = load_config(config_path)
+
         # We don't actually need to call the build function
         # Just simulate a successful result
-        with patch('insurgent.Build.build.build', return_value=True) as mock_build:
+        with patch("insurgent.Build.build.build", return_value=True) as mock_build:
             # Import the function within the patch context
             from insurgent.Build.build import build
+
             options = ["--verbose", "--debug"]
             result = build("test-project", config, options)
             self.assertTrue(result)
@@ -134,13 +156,18 @@ namespace test {
 
     def test_build_failure(self):
         """Test the build failure case"""
+        # Verify paths exist
+        config_path = os.path.join(self.project_dir, "project.yaml")
+        self.assertTrue(os.path.exists(config_path), "Config file doesn't exist")
+
         # Load project configuration
-        config = load_config(os.path.join(self.project_dir, "project.yaml"))
-        
+        config = load_config(config_path)
+
         # Simulate a failed build
-        with patch('insurgent.Build.build.build', return_value=None) as mock_build:
-            # Import the function within the patch context  
+        with patch("insurgent.Build.build.build", return_value=None) as mock_build:
+            # Import the function within the patch context
             from insurgent.Build.build import build
+
             result = build("test-project", config)
             self.assertIsNone(result)
             mock_build.assert_called_once()

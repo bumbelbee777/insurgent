@@ -18,7 +18,7 @@ from insurgent.TUI.box import Box
 def write_to_log_file(message):
     """
     Write a message to the build log file.
-    
+
     Args:
         message: The message to write to the log file
     """
@@ -41,7 +41,18 @@ def write_to_log_file(message):
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             # Strip color codes for log file
             clean_message = message
-            for color in [RED, GREEN, BLUE, YELLOW, MAGENTA, CYAN, RESET, BOLD, ITALIC, UNDERLINE]:
+            for color in [
+                RED,
+                GREEN,
+                BLUE,
+                YELLOW,
+                MAGENTA,
+                CYAN,
+                RESET,
+                BOLD,
+                ITALIC,
+                UNDERLINE,
+            ]:
                 clean_message = clean_message.replace(color, "")
             f.write(f"[{timestamp}] {clean_message}\n")
     except Exception as e:
@@ -51,7 +62,7 @@ def write_to_log_file(message):
 def log(message, to_stdout=True, use_box=False):
     """
     Log a build message.
-    
+
     Args:
         message: The message to log
         to_stdout: Whether to print the message to stdout
@@ -61,7 +72,7 @@ def log(message, to_stdout=True, use_box=False):
         write_to_log_file(f"[BUILD] {message}")
         if to_stdout:
             if use_box:
-                box = Box(style='light', title='Build')
+                box = Box(style="light", title="Build")
                 box_lines = box.draw([message])
                 for line in box_lines:
                     print(line)
@@ -79,7 +90,7 @@ def log(message, to_stdout=True, use_box=False):
 def error(message, use_box=True):
     """
     Log an error message.
-    
+
     Args:
         message: The error message to log
         use_box: Whether to display the message in a box
@@ -87,7 +98,7 @@ def error(message, use_box=True):
     try:
         write_to_log_file(f"[ERROR] {message}")
         if use_box:
-            box = Box(style='heavy', title='Error')
+            box = Box(style="heavy", title="Error")
             box_lines = box.draw([message])
             for line in box_lines:
                 print(line)
@@ -104,7 +115,7 @@ def error(message, use_box=True):
 def warning(message, use_box=False):
     """
     Log a warning message.
-    
+
     Args:
         message: The warning message to log
         use_box: Whether to display the message in a box
@@ -112,7 +123,7 @@ def warning(message, use_box=False):
     try:
         write_to_log_file(f"[WARNING] {message}")
         if use_box:
-            box = Box(style='light', title='Warning')
+            box = Box(style="light", title="Warning")
             box_lines = box.draw([message])
             for line in box_lines:
                 print(line)
@@ -129,7 +140,7 @@ def warning(message, use_box=False):
 def info(message, use_box=False):
     """
     Log an info message.
-    
+
     Args:
         message: The info message to log
         use_box: Whether to display the message in a box
@@ -137,7 +148,7 @@ def info(message, use_box=False):
     try:
         write_to_log_file(f"[INFO] {message}")
         if use_box:
-            box = Box(style='light', title='Info')
+            box = Box(style="light", title="Info")
             box_lines = box.draw([message])
             for line in box_lines:
                 print(line)
@@ -154,7 +165,7 @@ def info(message, use_box=False):
 def success(message, use_box=False):
     """
     Log a success message.
-    
+
     Args:
         message: The success message to log
         use_box: Whether to display the message in a box
@@ -162,7 +173,7 @@ def success(message, use_box=False):
     try:
         write_to_log_file(f"[SUCCESS] {message}")
         if use_box:
-            box = Box(style='light', title='Success')
+            box = Box(style="light", title="Success")
             box_lines = box.draw([message])
             for line in box_lines:
                 print(line)

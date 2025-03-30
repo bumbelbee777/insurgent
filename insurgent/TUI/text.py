@@ -50,14 +50,23 @@ class Text:
     Text styling utility for terminal output.
     Provides methods for applying colors and styles to text.
     """
-    
+
     @staticmethod
-    def style(text, color=None, bg_color=None, bold=False, italic=False, 
-              underline=False, blink=False, reverse=False, hidden=False, 
-              strikethrough=False):
+    def style(
+        text,
+        color=None,
+        bg_color=None,
+        bold=False,
+        italic=False,
+        underline=False,
+        blink=False,
+        reverse=False,
+        hidden=False,
+        strikethrough=False,
+    ):
         """
         Apply ANSI styles to text.
-        
+
         Args:
             text: Text to style
             color: Foreground color name
@@ -69,12 +78,12 @@ class Text:
             reverse: Apply reverse video
             hidden: Make text hidden
             strikethrough: Apply strikethrough
-            
+
         Returns:
             Styled text with ANSI escape codes
         """
         style_codes = []
-        
+
         # Apply text styles
         if bold:
             style_codes.append(BOLD)
@@ -90,7 +99,7 @@ class Text:
             style_codes.append(HIDDEN)
         if strikethrough:
             style_codes.append(STRIKETHROUGH)
-            
+
         # Apply foreground color
         if color:
             color = color.lower()
@@ -126,7 +135,7 @@ class Text:
                 style_codes.append(BRIGHT_CYAN)
             elif color == "bright_white":
                 style_codes.append(BRIGHT_WHITE)
-                
+
         # Apply background color
         if bg_color:
             bg_color = bg_color.lower()
@@ -162,114 +171,116 @@ class Text:
                 style_codes.append(BG_BRIGHT_CYAN)
             elif bg_color == "bright_white":
                 style_codes.append(BG_BRIGHT_WHITE)
-                
+
         # Return styled text or original text if no styles applied
         if style_codes:
             styled_text = "".join(style_codes) + str(text) + RESET
             return styled_text
         return str(text)
-        
+
     @staticmethod
     def strip_ansi(text):
         """
         Remove ANSI escape codes from text.
-        
+
         Args:
             text: Text with ANSI escape codes
-            
+
         Returns:
             Clean text without ANSI codes
         """
         import re
-        ansi_pattern = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
-        return ansi_pattern.sub('', text)
-        
+
+        ansi_pattern = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
+        return ansi_pattern.sub("", text)
+
     @staticmethod
     def get_visible_length(text):
         """
         Get the visible length of text (ignoring ANSI codes).
-        
+
         Args:
             text: Text with possible ANSI codes
-            
+
         Returns:
             Visible length of the text
         """
         return len(Text.strip_ansi(text))
-    
+
     @classmethod
     def visible_length(cls, text):
         """
         Get the visible length of text (ignoring ANSI codes).
         Alias for get_visible_length for backward compatibility.
-        
+
         Args:
             text: Text with possible ANSI codes
-            
+
         Returns:
             Visible length of the text
         """
         return cls.get_visible_length(text)
-        
+
     @staticmethod
-    def align(text, width, alignment='left', fill_char=' '):
+    def align(text, width, alignment="left", fill_char=" "):
         """
         Align text within a given width.
-        
+
         Args:
             text: Text to align
             width: Width to align within
             alignment: Alignment type (left, center, right)
             fill_char: Character to use for padding
-            
+
         Returns:
             Aligned text
         """
         visible_length = Text.get_visible_length(text)
-        
+
         if visible_length >= width:
             return text
-            
+
         padding = width - visible_length
-        
-        if alignment == 'left':
+
+        if alignment == "left":
             return text + (fill_char * padding)
-        elif alignment == 'center':
+        elif alignment == "center":
             left_padding = padding // 2
             right_padding = padding - left_padding
             return (fill_char * left_padding) + text + (fill_char * right_padding)
-        elif alignment == 'right':
+        elif alignment == "right":
             return (fill_char * padding) + text
         else:
             return text  # Default to left alignment
-            
+
     @staticmethod
-    def truncate(text, max_length, ellipsis='...'):
+    def truncate(text, max_length, ellipsis="..."):
         """
         Truncate text to a maximum visible length.
-        
+
         Args:
             text: Text to truncate
             max_length: Maximum visible length
             ellipsis: String to indicate truncation
-            
+
         Returns:
             Truncated text
         """
         visible_text = Text.strip_ansi(text)
-        
+
         if len(visible_text) <= max_length:
             return text
-            
+
         # Find all ANSI codes in the text
         import re
-        ansi_pattern = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+
+        ansi_pattern = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
         ansi_positions = [(m.start(), m.end()) for m in ansi_pattern.finditer(text)]
-        
+
         # Calculate the truncation position accounting for ANSI codes
         visible_pos = 0
         actual_pos = 0
-        
+
         while visible_pos < max_length - len(ellipsis) and actual_pos < len(text):
             # Skip ANSI codes
             is_ansi = False
@@ -278,26 +289,26 @@ class Text:
                     actual_pos = end
                     is_ansi = True
                     break
-                    
+
             if not is_ansi:
                 visible_pos += 1
                 actual_pos += 1
-                
+
         # Collect ANSI codes at the end to properly close styling
         end_codes = []
         for start, end in ansi_positions:
             if start >= actual_pos:
                 break
             code = text[start:end]
-            if not code.endswith('m'):  # Only collect color/style codes
+            if not code.endswith("m"):  # Only collect color/style codes
                 continue
-            if code.endswith('0m'):  # Reset code
+            if code.endswith("0m"):  # Reset code
                 end_codes = []
             else:
                 end_codes.append(code)
-                
+
         # Add reset code if needed
         if end_codes:
             end_codes.append(RESET)
-            
-        return text[:actual_pos] + ellipsis + ''.join(end_codes) 
+
+        return text[:actual_pos] + ellipsis + "".join(end_codes)

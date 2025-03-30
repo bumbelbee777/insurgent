@@ -39,6 +39,7 @@ CROSS = f"{RED}❌{RESET}"
 ARROW = f"{CYAN}➜{RESET}"
 INFO = f"{BLUE}ℹ{RESET}"
 
+
 def style_text(text, **kwargs):
     """
     Style text with the specified options.
@@ -46,12 +47,12 @@ def style_text(text, **kwargs):
     """
     # Apply styling directly
     styled = text
-    
-    if kwargs.get('bold'):
+
+    if kwargs.get("bold"):
         styled = f"{BOLD}{styled}{RESET}"
-    if kwargs.get('color'):
+    if kwargs.get("color"):
         color_code = globals().get(f"FG_{kwargs['color'].upper()}", "")
         if color_code:
             styled = f"{color_code}{styled}{RESET}"
-            
+
     return styled

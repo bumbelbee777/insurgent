@@ -1,34 +1,42 @@
 import os
 import sys
 import unittest
+import tempfile
 from unittest.mock import MagicMock, patch
 
 # Add insurgent module to path if needed
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from insurgent.Shell.completions import (get_completions, get_path_completions,
-                                         handle_tab,
-                                         register_command_completions)
+from insurgent.Shell.completions import (
+    get_completions,
+    get_path_completions,
+    handle_tab,
+    register_command_completions,
+)
 
 
 class TestCompletions(unittest.TestCase):
     def setUp(self):
-        # Create a temporary test directory
-        self.test_dir = os.path.join(os.getcwd(), "test_completions_dir")
-        if not os.path.exists(self.test_dir):
-            os.mkdir(self.test_dir)
+        # Save current directory
+        self.original_dir = os.getcwd()
+
+        # Create a temporary test directory using tempfile
+        self.test_dir = tempfile.mkdtemp(prefix="insurgent_test_")
 
         # Create some files in the test directory
         for file_name in ["file1.txt", "file2.txt", "test_file.py"]:
-            with open(os.path.join(self.test_dir, file_name), "w") as f:
+            file_path = os.path.join(self.test_dir, file_name)
+            with open(file_path, "w") as f:
                 f.write("Test content")
 
         # Create a subdirectory
         self.subdir = os.path.join(self.test_dir, "subdir")
-        if not os.path.exists(self.subdir):
-            os.mkdir(self.subdir)
+        os.makedirs(self.subdir, exist_ok=True)
 
     def tearDown(self):
+        # Always return to original directory
+        os.chdir(self.original_dir)
+
         # Remove test directory
         if os.path.exists(self.test_dir):
             import shutil
@@ -55,49 +63,54 @@ class TestCompletions(unittest.TestCase):
         self.assertEqual(completions[0], "cd")
 
     def test_path_completions(self):
-        # Test with real files in the test directory
-        os.chdir(self.test_dir)
-        
-        # Test path completion with empty string (should list current directory)
-        completions = get_path_completions("")
-        self.assertEqual(len(completions), 4)  # 3 files + 1 subdirectory
-        self.assertIn("file1.txt", completions)
-        self.assertIn("file2.txt", completions)
-        self.assertIn("test_file.py", completions)
-        self.assertIn("subdir/", completions)
-        
-        # Test partial path completion
-        completions = get_path_completions("f")
-        self.assertEqual(len(completions), 2)
-        self.assertIn("file1.txt", completions)
-        self.assertIn("file2.txt", completions)
-        
-        # Test completion with specific extension
-        completions = get_path_completions("test")
-        self.assertEqual(len(completions), 1)
-        self.assertIn("test_file.py", completions)
-        
-        # Test completion with path to subdirectory
-        completions = get_path_completions("sub")
-        self.assertEqual(len(completions), 1)
-        self.assertIn("subdir/", completions)
-        
-        # Return to original directory after test
-        os.chdir("..")
+        try:
+            # Change to test directory
+            os.chdir(self.test_dir)
+
+            # Test path completion with empty string (should list current directory)
+            completions = get_path_completions("")
+            self.assertEqual(len(completions), 4)  # 3 files + 1 subdirectory
+            self.assertIn("file1.txt", completions)
+            self.assertIn("file2.txt", completions)
+            self.assertIn("test_file.py", completions)
+            self.assertIn("subdir/", completions)
+
+            # Test partial path completion
+            completions = get_path_completions("f")
+            self.assertEqual(len(completions), 2)
+            self.assertIn("file1.txt", completions)
+            self.assertIn("file2.txt", completions)
+
+            # Test completion with specific extension
+            completions = get_path_completions("test")
+            self.assertEqual(len(completions), 1)
+            self.assertIn("test_file.py", completions)
+
+            # Test completion with path to subdirectory
+            completions = get_path_completions("sub")
+            self.assertEqual(len(completions), 1)
+            self.assertIn("subdir/", completions)
+        finally:
+            # Always return to original directory
+            os.chdir(self.original_dir)
 
     @patch("os.listdir")
     @patch("os.path.isdir")
     @patch("os.path.exists")
     def test_path_completions_with_mocks(self, mock_exists, mock_isdir, mock_listdir):
         # Mock os.path.isdir to identify directories correctly
-        mock_isdir.side_effect = lambda path: path.endswith("subdir")
-        
+        def is_dir_side_effect(path):
+            # Match any path that ends with subdir
+            return os.path.basename(path) == "subdir"
+
+        mock_isdir.side_effect = is_dir_side_effect
+
         # Mock os.path.exists to return True for test paths
         mock_exists.return_value = True
-        
+
         # Mock os.listdir to return test files
         mock_listdir.return_value = ["file1.txt", "file2.txt", "subdir"]
-        
+
         # Test path completion with empty path
         completions = get_path_completions("")
         mock_listdir.assert_called_with(".")
@@ -105,7 +118,7 @@ class TestCompletions(unittest.TestCase):
         self.assertIn("file1.txt", completions)
         self.assertIn("file2.txt", completions)
         self.assertIn("subdir/", completions)
-        
+
         # Test path completion with specific prefix
         completions = get_path_completions("f")
         self.assertEqual(len(completions), 2)
@@ -139,7 +152,7 @@ class TestCompletions(unittest.TestCase):
             new_input, should_redisplay = handle_tab("c", 1)
             self.assertEqual(new_input, "c")
             self.assertTrue(should_redisplay)
-        
+
         # Since cycling depends on the completions available, which can vary
         # by environment, we'll skip testing that part for now
         pass
