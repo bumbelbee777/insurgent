@@ -1,55 +1,46 @@
 # InsurgeNT
 
-![Build Status](https://github.com/bumbelbee777/insurgent/workflows/InsurgeNT%20CI%2FCD/badge.svg)
-[![codecov](https://codecov.io/gh/bumbelbee777/insurgent/branch/main/graph/badge.svg)](https://codecov.io/gh/bumbelbee777/insurgent)
 [![PyPI version](https://badge.fury.io/py/insurgent.svg)](https://badge.fury.io/py/insurgent)
 
-A modern shell and self-contained build system for developers, designed to simplify project management and enhance developer experience.
+A modern, powerful development shell and build system for C/C++ projects.
 
 ## Features
 
+- Intelligent code completion for seamless C/C++ development
+- Powerful build pipeline with incremental compilation
+- Multiple toolchain support for cross-platform development
+- Smart project management with dependency tracking
+- **Parallel builds** across multiple projects and components for maximum performance
 - Custom shell with tab completion
 - Command history management
-- File manipulation utilities
-- Self-contained build system for C/C++ projects (no Make dependency)
 - Project configuration via YAML
 - Cross-platform support (Windows, macOS, Linux)
 
-## Installation
+## Getting Started
 
-```bash
-pip install insurgent
+To start using InsurgeNT, run the shell:
+
+```
+python -m insurgent.shell
 ```
 
-## Quick Start
+### Build Commands
 
-After installation, you can start the InsurgeNT dev shell:
+InsurgeNT now supports parallel builds by default for maximum performance.
 
-```bash
-insurgent # Or 'int', which is a default alias.
 ```
+# Build all targets in parallel
+build
 
-Or build without the shell directly:
+# Build specific target
+build myapp
 
-```bash
-insurgent build
+# Build with debug symbols
+build --debug mylib
+
+# Build sequentially (non-parallel)
+build --sequential
 ```
-
-### Available Commands
-
-- `about` - Display information about InsurgeNT
-- `help` - Show available commands
-- `exit` - Exit the shell
-- `clear` - Clear the terminal
-- `ls` - List files in the current directory
-- `cd <dir>` - Change directory
-- `mkdir <dir>` - Create a directory
-- `rm <file>` - Remove a file
-- `touch <file>` - Create an empty file
-- `cp <source> <dest>` - Copy a file
-- `cat <file>` - Display file contents
-- `build <project> [options]` - Build a project
-- `history` - Show command history
 
 ## Creating a Project
 
@@ -80,50 +71,37 @@ bootstrap:
   command: "mkdir -p bin"
 ```
 
+## Installation
+
+```
+pip install insurgent
+```
+
+## Usage
+
+After installation, you can run the development shell by executing:
+
+```
+python -m insurgent.shell
+```
+
+### Available Commands
+
+- `ls`, `cd`, `pwd` - File navigation
+- `mkdir`, `touch`, `rm`, `cp` - File operations
+- `build <project> [options]` - Build a project
+- `history` - Show command history
+
 ## Build System
 
-InsurgeNT features a self-contained build system that does not rely on external build tools like Make. It:
+InsurgeNT includes a powerful build system for C/C++ projects with features like:
 
-- Auto-detects C, C++, and assembly source files
-- Handles incremental builds by tracking file changes
-- Supports parallel compilation
-- Manages project dependencies and subprojects
-- Generates executables or libraries based on project configuration
-
-### Build Options
-
-```bash
-insurgent build [options]
-```
-
-Available options:
-- `--incremental` - Only rebuild changed files
-- `--verbose` - Show detailed build information
-- `--silent` - Suppress most output
-- `--no-subprojects` - Don't build subprojects
-- `--debug` - Show debug information on failures
-
-## Development
-
-Clone the repository:
-
-```bash
-git clone https://github.com/bumbelbee777/insurgent.git
-cd insurgent
-```
-
-Then install development dependencies:
-
-```bash
-pip install -e ".[dev]"
-```
-
-Run tests:
-
-```bash
-pytest tests/
-```
+- Incremental builds
+- Dependency tracking
+- Multiple compiler support
+- Parallel compilation for maximum performance
+- Cross-platform compatibility
 
 ## License
 
-InsurgeNT is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+MIT

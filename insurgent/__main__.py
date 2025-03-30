@@ -1,4 +1,6 @@
 import sys
-from . import main
 
-sys.exit(main())
+from insurgent import main
+
+if __name__ == "__main__":
+    sys.exit(main())

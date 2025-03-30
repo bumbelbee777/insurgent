@@ -1,5 +1,7 @@
 import os
+
 import yaml
+
 from insurgent.Logging.logger import error, log
 
 MANDATORY_FIELDS = [
@@ -18,10 +20,10 @@ MANDATORY_FIELDS = [
 def load_config(config_path: str) -> dict:
     """
     Load and validate project configuration from YAML file
-    
+
     Args:
         config_path: Path to the project.yaml file
-        
+
     Returns:
         Dictionary with project configuration or empty dict if error
     """
@@ -42,7 +44,9 @@ def load_config(config_path: str) -> dict:
     # Check for mandatory fields with a more flexible approach
     missing_fields = [field for field in MANDATORY_FIELDS if field not in config]
     if missing_fields:
-        error(f"Missing mandatory field(s) in {config_path}: {', '.join(missing_fields)}")
+        error(
+            f"Missing mandatory field(s) in {config_path}: {', '.join(missing_fields)}"
+        )
         # Don't return empty - return what we have, but with a warning
         log(f"WARNING: Some mandatory fields are missing. Build may fail.")
 
@@ -56,12 +60,10 @@ def load_config(config_path: str) -> dict:
     if "compiler_flags" in config and isinstance(config["compiler_flags"], str):
         # Convert string to structured format
         flags_str = config["compiler_flags"]
-        config["compiler_flags"] = {
-            "common": flags_str
-        }
+        config["compiler_flags"] = {"common": flags_str}
     elif "compiler_flags" not in config:
         config["compiler_flags"] = {}
-    
+
     # Set compiler flags defaults
     compiler_flags = config["compiler_flags"]
     compiler_flags.setdefault("global", "")
@@ -75,7 +77,7 @@ def load_config(config_path: str) -> dict:
     # Handle other optional fields
     config.setdefault("subprojects", [])
     config.setdefault("ignore", [])
-    
+
     # Handle bootstrap if defined
     if "bootstrap" in config and isinstance(config["bootstrap"], dict):
         bootstrap = config["bootstrap"]
@@ -84,16 +86,19 @@ def load_config(config_path: str) -> dict:
     else:
         config["bootstrap"] = {"task": "bootstrap", "command": ""}
 
-    log(f"Loaded project configuration: {config.get('project', 'Unknown')} v{config.get('version', '0.0.1')}")
+    log(
+        f"Loaded project configuration: {config.get('project', 'Unknown')} v{config.get('version', '0.0.1')}"
+    )
     return config
+
 
 def validate_config(config: dict) -> bool:
     """
     Validate if a config dictionary has all required fields and correct types
-    
+
     Args:
         config: Project configuration dictionary
-        
+
     Returns:
         True if valid, False if invalid
     """
@@ -102,31 +107,47 @@ def validate_config(config: dict) -> bool:
     if missing_fields:
         error(f"Missing mandatory field(s): {', '.join(missing_fields)}")
         return False
-    
+
     # Validate 'language' field
     language = config.get("language", "").lower()
     if language not in ["c", "cpp", "c++"]:
         error(f"Invalid language '{language}'. Must be 'c' or 'c++/cpp'.")
         return False
-    
+
     # Validate 'standard' field
     standard = config.get("standard", "").lower()
-    valid_standards = ["ansic", "c99", "c11", "c17", "c++11", "c++14", "c++17", "c++20", "c++23"]
+    valid_standards = [
+        "ansic",
+        "c99",
+        "c11",
+        "c17",
+        "c++11",
+        "c++14",
+        "c++17",
+        "c++20",
+        "c++23",
+    ]
     if standard not in valid_standards:
-        error(f"Invalid standard '{standard}'. Must be one of {', '.join(valid_standards)}.")
+        error(
+            f"Invalid standard '{standard}'. Must be one of {', '.join(valid_standards)}."
+        )
         return False
-    
+
     # Validate project_type
     project_type = config.get("project_type", "").lower()
     if project_type not in ["executable", "library"]:
-        error(f"Invalid project_type '{project_type}'. Must be 'executable' or 'library'.")
+        error(
+            f"Invalid project_type '{project_type}'. Must be 'executable' or 'library'."
+        )
         return False
-    
+
     # Validate project_dirs exist
     project_dirs = config.get("project_dirs", [])
     for directory in project_dirs:
-        dir_path = os.path.join(os.path.dirname(os.path.abspath(config.get("_config_path", ""))), directory)
+        dir_path = os.path.join(
+            os.path.dirname(os.path.abspath(config.get("_config_path", ""))), directory
+        )
         if not os.path.exists(dir_path):
             log(f"WARNING: Project directory '{directory}' does not exist.")
-    
+
     return True

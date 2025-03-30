@@ -19,8 +19,6 @@
     - `command`- Command to run
 * `description`   - A description of your project.
 * `version`       - The version of your project (defaulted to `0.0.1`).
-* `build_rule`    - The build rule of your project (defaulted to `all`).
-* `clean_rule`    - The clean rule of your project (defaulted to `clean`).
 * `compiler_flags`- The compiler flags used by your project (will override `make` flags, be careful!).
     - `global`  - Global flags (inherited by all subprojects).
     - `common`  - Language-agnostic compiler flags.
