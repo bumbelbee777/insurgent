@@ -113,7 +113,7 @@ class BuildEngine:
             return {}
 
         subproject_engines = {}
-        
+
         # First handle explicitly declared subprojects
         if "subprojects" in self.config:
             for subproject_dir in self.config["subprojects"]:
@@ -123,7 +123,7 @@ class BuildEngine:
                     subproject_engines[subproject_dir] = BuildEngine(subproject_path)
                 else:
                     error(f"Subproject directory {subproject_dir} not found.")
-        
+
         # Now check project_dirs for auto-discovery of nested projects
         # that have their own project.yaml but weren't explicitly declared as subprojects
         project_dirs = self.config.get("project_dirs", [])
@@ -131,15 +131,17 @@ class BuildEngine:
             dir_path = os.path.join(self.project_path, project_dir)
             if not os.path.exists(dir_path):
                 continue
-                
+
             # Skip if this is already a declared subproject
             if project_dir in subproject_engines:
                 continue
-                
+
             # Check if this directory has a project.yaml file
             subdir_project_yaml = os.path.join(dir_path, "project.yaml")
             if os.path.exists(subdir_project_yaml):
-                info(f"Auto-discovered nested project in {project_dir}, adding as subproject...")
+                info(
+                    f"Auto-discovered nested project in {project_dir}, adding as subproject..."
+                )
                 subproject_engines[project_dir] = BuildEngine(dir_path)
 
         return subproject_engines
@@ -236,17 +238,22 @@ class BuildEngine:
         for d in project_dirs:
             # First check if the directory exists
             if not os.path.exists(d):
-                warning(f"Project directory {d} does not exist, skipping.", use_box=True)
+                warning(
+                    f"Project directory {d} does not exist, skipping.", use_box=True
+                )
                 continue
-                
+
             # Check if this directory has its own project.yaml
             subdir_project_yaml = os.path.join(d, "project.yaml")
             if os.path.exists(subdir_project_yaml) and d != self.project_path:
                 # This is a nested project with its own config file, but it's not a declared subproject
                 # Skip it to avoid processing it as part of the parent project
-                warning(f"Directory {d} contains a project.yaml file but was not declared as a subproject. Skipping.", use_box=True)
+                warning(
+                    f"Directory {d} contains a project.yaml file but was not declared as a subproject. Skipping.",
+                    use_box=True,
+                )
                 continue
-                
+
             for ext in [".c", ".cpp", ".cc", ".cxx", ".s", ".asm"]:
                 pattern = os.path.join(d, f"**/*{ext}")
                 source_files.extend(glob.glob(pattern, recursive=True))
@@ -255,7 +262,9 @@ class BuildEngine:
         if ignore_patterns:
             for pattern in ignore_patterns:
                 source_files = [
-                    f for f in source_files if not os.path.basename(f).startswith(pattern)
+                    f
+                    for f in source_files
+                    if not os.path.basename(f).startswith(pattern)
                 ]
 
         return source_files
@@ -405,7 +414,9 @@ class BuildEngine:
         if not silent:
             # Display library creation progress with styled output
             output_name = os.path.basename(output_file)
-            info(f"Creating library {Text.style(output_name, color='cyan', bold=True)}...")
+            info(
+                f"Creating library {Text.style(output_name, color='cyan', bold=True)}..."
+            )
 
         # Execute the archiver command
         try:
@@ -421,7 +432,9 @@ class BuildEngine:
                     error_msg = stderr.decode()
                     error(f"Library creation failed:\n{error_msg}", use_box=True)
                 else:
-                    error("Library creation failed with no error message.", use_box=True)
+                    error(
+                        "Library creation failed with no error message.", use_box=True
+                    )
                 return False
 
             if not silent and stdout:
@@ -469,7 +482,10 @@ class BuildEngine:
                         error_msg = stderr.decode()
                         error(f"Bootstrap command failed:\n{error_msg}", use_box=True)
                     else:
-                        error(f"Bootstrap command '{cmd}' failed with no error message.", use_box=True)
+                        error(
+                            f"Bootstrap command '{cmd}' failed with no error message.",
+                            use_box=True,
+                        )
                     return False
 
                 if stdout:
@@ -512,8 +528,10 @@ class BuildEngine:
         if build_subprojects and self.subproject_engines:
             for name, engine in self.subproject_engines.items():
                 if not silent:
-                    subproject_box = Box(style='light', title='Subproject')
-                    subproject_content = [f"Building subproject: {Text.style(name, color='cyan', bold=True)}"]
+                    subproject_box = Box(style="light", title="Subproject")
+                    subproject_content = [
+                        f"Building subproject: {Text.style(name, color='cyan', bold=True)}"
+                    ]
                     for line in subproject_box.draw(subproject_content):
                         print(line)
 
@@ -550,23 +568,30 @@ class BuildEngine:
         if not silent:
             # Create a table showing the build configuration
             build_table = Table(
-                headers=["Setting", "Value"],
-                alignments=["left", "left"],
-                style="light"
+                headers=["Setting", "Value"], alignments=["left", "left"], style="light"
             )
-            
+
             # Add rows to the table
-            build_table.add_rows([
-                ["Project", os.path.basename(self.project_path)],
-                ["Output", os.path.basename(output_file)],
-                ["Sources", str(len(source_files))],
-                ["Compiler", self.cxx_compiler if self.config.get("language", "").lower() in ["cpp", "c++"] else self.c_compiler],
-                ["Build Type", "Incremental" if incremental else "Full"],
-                ["Threads", str(self.jobs if multi_threaded else 1)]
-            ])
-            
+            build_table.add_rows(
+                [
+                    ["Project", os.path.basename(self.project_path)],
+                    ["Output", os.path.basename(output_file)],
+                    ["Sources", str(len(source_files))],
+                    [
+                        "Compiler",
+                        (
+                            self.cxx_compiler
+                            if self.config.get("language", "").lower() in ["cpp", "c++"]
+                            else self.c_compiler
+                        ),
+                    ],
+                    ["Build Type", "Incremental" if incremental else "Full"],
+                    ["Threads", str(self.jobs if multi_threaded else 1)],
+                ]
+            )
+
             # Display the build summary
-            summary_box = Box(style='light', title='Build Summary')
+            summary_box = Box(style="light", title="Build Summary")
             summary_content = []
             for line in build_table.draw():
                 summary_content.append(line)
@@ -589,7 +614,9 @@ class BuildEngine:
                     need_compile = False
 
             if need_compile:
-                file_type = "cpp" if source_file.endswith((".cpp", ".cc", ".cxx")) else "c"
+                file_type = (
+                    "cpp" if source_file.endswith((".cpp", ".cc", ".cxx")) else "c"
+                )
                 if source_file.endswith((".s", ".asm")):
                     file_type = "asm"
                 files_to_compile.append((source_file, obj_file, file_type))
@@ -600,8 +627,10 @@ class BuildEngine:
         # Compile the files
         if files_to_compile:
             if not silent:
-                compile_box = Box(style='light', title='Compilation')
-                compile_content = [f"Compiling {Text.style(str(len(files_to_compile)), color='cyan', bold=True)} of {len(source_files)} files..."]
+                compile_box = Box(style="light", title="Compilation")
+                compile_content = [
+                    f"Compiling {Text.style(str(len(files_to_compile)), color='cyan', bold=True)} of {len(source_files)} files..."
+                ]
                 for line in compile_box.draw(compile_content):
                     print(line)
 
@@ -616,7 +645,7 @@ class BuildEngine:
 
                 # Wait for all compilation tasks to complete
                 results = await asyncio.gather(*tasks, return_exceptions=True)
-                
+
                 # Check for compilation errors
                 for i, result in enumerate(results):
                     if isinstance(result, Exception):
@@ -628,7 +657,9 @@ class BuildEngine:
             else:
                 # Compile files sequentially
                 for source_file, obj_file, file_type in files_to_compile:
-                    result = await self._compile_file(source_file, obj_file, file_type, silent)
+                    result = await self._compile_file(
+                        source_file, obj_file, file_type, silent
+                    )
                     if not result:
                         return False
 
@@ -657,13 +688,13 @@ class BuildEngine:
             # Show build success message with styling
             output_name = os.path.basename(output_file)
             output_size = os.path.getsize(output_file) / 1024  # KB
-            
-            success_box = Box(style='double', title='Build Completed')
+
+            success_box = Box(style="double", title="Build Completed")
             success_content = [
                 f"Output: {Text.style(output_name, color='green', bold=True)}",
                 f"Size: {Text.style(f'{output_size:.2f} KB', color='cyan')}",
                 f"Time: {Text.style(f'{build_time:.2f} seconds', color='yellow')}",
-                f"Files: {Text.style(str(len(source_files)), color='blue')}"
+                f"Files: {Text.style(str(len(source_files)), color='blue')}",
             ]
             for line in success_box.draw(success_content):
                 print(line)
@@ -718,7 +749,7 @@ class BuildEngine:
                 shutil.rmtree(self.build_dir)
                 os.makedirs(self.build_dir, exist_ok=True)
                 info(f"Cleaned build directory: {self.build_dir}")
-            
+
             # Clean output file
             output_file = ""
             if self.config and "output" in self.config:
@@ -743,13 +774,15 @@ class BuildEngine:
             self._save_build_cache()
 
             # Display cleaning summary
-            clean_box = Box(style='light', title='Clean Completed')
+            clean_box = Box(style="light", title="Clean Completed")
             clean_content = [
                 f"Removed build directory: {Text.style(self.build_dir, color='cyan')}",
             ]
             if output_file:
-                clean_content.append(f"Removed output file: {Text.style(output_file, color='cyan')}")
-            
+                clean_content.append(
+                    f"Removed output file: {Text.style(output_file, color='cyan')}"
+                )
+
             for line in clean_box.draw(clean_content):
                 print(line)
 
@@ -769,7 +802,7 @@ class BuildEngine:
             return {}
 
         source_files = self._find_source_files()
-        
+
         # Create project information
         info = {
             "name": self.config.get("name", os.path.basename(self.project_path)),

@@ -1,6 +1,7 @@
 """
 Built-in commands for the InsurgeNT Shell.
 """
+
 import asyncio
 import os
 import os.path
@@ -33,14 +34,14 @@ def help_cmd(commands, args=None):
         # Display general help
         result = ["Available commands:"]
         for cmd, info in sorted(commands.items()):
-            help_text = info.get('help', 'No help available')
+            help_text = info.get("help", "No help available")
             result.append(f"  {cmd:12} - {help_text}")
         return "\n".join(result)
     else:
         # Display help for specific command
         cmd = args[0]
         if cmd in commands:
-            help_text = commands[cmd].get('help', 'No help available')
+            help_text = commands[cmd].get("help", "No help available")
             return f"{cmd} - {help_text}"
         else:
             return f"Unknown command: {cmd}"
@@ -53,37 +54,37 @@ def exit_cmd(args=None):
 
 def clear(args=None):
     """Clear the terminal screen."""
-    os.system('cls' if os.name == 'nt' else 'clear')
+    os.system("cls" if os.name == "nt" else "clear")
     return None
 
 
 def ls(args=None):
     """
     List directory contents.
-    
+
     Args:
         args: Command arguments
     """
     # For direct function calls in tests
     if args is None:
         args = []
-    
+
     # Parse arguments
     path = "."
     if args and args[0] and not args[0].startswith("-"):
         path = args[0]
-        
+
     show_all = "-a" in args or "-la" in args
     use_long_format = "-l" in args or "-la" in args
-    
+
     try:
         # Get directory contents
         entries = os.listdir(path)
-        
+
         # Filter hidden files if not showing all
         if not show_all:
             entries = [e for e in entries if not e.startswith(".")]
-            
+
         # Sort entries (directories first, then files)
         dirs = []
         files = []
@@ -93,30 +94,30 @@ def ls(args=None):
                 dirs.append(entry)
             else:
                 files.append(entry)
-                
+
         sorted_entries = dirs + files
-        
+
         # Return list for tests
         if isinstance(args, list) and len(args) == 0:
             return sorted_entries
-        
+
         # Format output
         if use_long_format:
             result = []
             for entry in sorted_entries:
                 full_path = os.path.join(path, entry)
                 stats = os.stat(full_path)
-                
+
                 # Format mode, size, and modification time
                 size = stats.st_size
                 mtime = time.strftime("%b %d %H:%M", time.localtime(stats.st_mtime))
-                
+
                 # Mark directories with a trailing slash
                 if os.path.isdir(full_path):
                     entry += "/"
-                    
+
                 result.append(f"{size:8} {mtime} {entry}")
-                
+
             return "\n".join(result)
         else:
             # Add trailing slashes to directories
@@ -126,9 +127,9 @@ def ls(args=None):
                     formatted.append(f"{entry}/")
                 else:
                     formatted.append(entry)
-                    
+
             return "  ".join(formatted)
-            
+
     except FileNotFoundError:
         return f"ls: cannot access '{path}': No such file or directory"
     except PermissionError:
@@ -140,7 +141,7 @@ def ls(args=None):
 def cd(args=None):
     """
     Change directory.
-    
+
     Args:
         args: Command arguments
     """
@@ -152,12 +153,12 @@ def cd(args=None):
         path = os.path.expanduser("~")
     else:
         path = args[0]
-        
+
     try:
         # Expand path (for ~ and environment variables)
         path = os.path.expanduser(path)
         path = os.path.expandvars(path)
-        
+
         # Change directory
         prev_dir = os.getcwd()
         os.chdir(path)
@@ -175,7 +176,7 @@ def cd(args=None):
 def mkdir(args=None):
     """
     Create a directory.
-    
+
     Args:
         args: Command arguments
     """
@@ -187,18 +188,18 @@ def mkdir(args=None):
     else:
         if not args or not args[0]:
             return "mkdir: missing operand"
-            
+
         # Parse arguments
         create_parents = "-p" in args
-        
+
         # Get directories to create
         paths = [arg for arg in args if not arg.startswith("-")]
-    
+
     try:
         for path in paths:
             # Expand path
             path = os.path.expanduser(path)
-            
+
             if create_parents:
                 os.makedirs(path, exist_ok=True)
             else:
@@ -217,7 +218,7 @@ def mkdir(args=None):
 def rm(args=None):
     """
     Remove a file or directory.
-    
+
     Args:
         args: Command arguments
     """
@@ -230,19 +231,19 @@ def rm(args=None):
     else:
         if not args or not args[0]:
             return "rm: missing operand"
-            
+
         # Parse arguments
         recursive = "-r" in args or "-rf" in args
         force = "-f" in args or "-rf" in args
-        
+
         # Get paths to remove
         paths = [arg for arg in args if not arg.startswith("-")]
-    
+
     try:
         for path in paths:
             # Expand path
             path = os.path.expanduser(path)
-            
+
             if os.path.isdir(path):
                 if recursive:
                     shutil.rmtree(path)
@@ -262,7 +263,7 @@ def rm(args=None):
 def touch(args=None):
     """
     Create a file or update its timestamp.
-    
+
     Args:
         args: Command arguments
     """
@@ -274,14 +275,14 @@ def touch(args=None):
         if not args or not args[0]:
             return "touch: missing file operand"
         paths = args
-        
+
     try:
         for path in paths:
             # Expand path
             path = os.path.expanduser(path)
-            
+
             # Create or update file
-            with open(path, 'a'):
+            with open(path, "a"):
                 os.utime(path, None)
         return None
     except IsADirectoryError:
@@ -295,12 +296,12 @@ def touch(args=None):
 def cp(src=None, dst=None, args=None):
     """
     Copy files and directories.
-    
+
     This function can be called in three ways:
     1. cp(args=[...]) - from command line with arguments list
-    2. cp("source.txt", "dest.txt") - direct call with source and destination 
+    2. cp("source.txt", "dest.txt") - direct call with source and destination
     3. cp(args="source.txt") - single argument mode (missing destination)
-    
+
     Args:
         src: Source path
         dst: Destination path
@@ -310,43 +311,43 @@ def cp(src=None, dst=None, args=None):
     if args is not None:
         if isinstance(args, str):
             # Special case: called with just the source but no destination
-            return "cp: missing destination file operand" 
-            
+            return "cp: missing destination file operand"
+
         if not args or len(args) < 2:
             return "cp: missing file operand"
-            
+
         # Parse arguments
         recursive = "-r" in args or "-R" in args
-        
+
         # Get source and destination
         file_args = [arg for arg in args if not arg.startswith("-")]
         dst = file_args.pop()
         sources = file_args
-        
+
         if len(sources) == 0:
             return "cp: missing source file operand"
-    
+
     # Case 2: Called directly with source and destination arguments
     elif src is not None and dst is not None:
         sources = [src]
         recursive = False
-    
+
     # Case 3: Called incorrectly
     else:
         return "cp: missing file operand"
-        
+
     try:
         # Expand paths
         sources = [os.path.expanduser(s) for s in sources]
         dst = os.path.expanduser(dst)
-        
+
         # Check if destination is a directory
         dest_is_dir = os.path.isdir(dst)
-        
+
         # If multiple sources, destination must be a directory
         if len(sources) > 1 and not dest_is_dir:
             return f"cp: target '{dst}' is not a directory"
-            
+
         for source in sources:
             if os.path.isdir(source):
                 if recursive:
@@ -364,15 +365,15 @@ def cp(src=None, dst=None, args=None):
                     shutil.copy2(source, os.path.join(dst, os.path.basename(source)))
                 else:
                     shutil.copy2(source, dst)
-                    
+
         # For direct function calls in tests, return the content of the destination file
         if isinstance(src, str) and not os.path.isdir(dst):
             try:
-                with open(dst, 'r') as f:
+                with open(dst, "r") as f:
                     return f.read()
             except:
                 pass
-                
+
         return None
     except FileNotFoundError as e:
         return f"cp: cannot stat '{e.filename}': No such file or directory"
@@ -385,7 +386,7 @@ def cp(src=None, dst=None, args=None):
 def cat(args=None):
     """
     Display file contents.
-    
+
     Args:
         args: Command arguments
     """
@@ -397,15 +398,15 @@ def cat(args=None):
         if not args or not args[0]:
             return "cat: missing file operand"
         paths = args
-        
+
     try:
         result = []
         for path in paths:
             # Expand path
             path = os.path.expanduser(path)
-            
+
             # Read file
-            with open(path, 'r') as f:
+            with open(path, "r") as f:
                 result.append(f.read())
         return "".join(result)
     except IsADirectoryError:
@@ -423,7 +424,7 @@ def cat(args=None):
 def cwd(args=None):
     """
     Print current working directory.
-    
+
     Args:
         args: Command arguments
     """
@@ -433,7 +434,7 @@ def cwd(args=None):
 def history(history_obj, history_list, args=None):
     """
     Show command history.
-    
+
     Args:
         history_obj: History object
         history_list: List of history entries
@@ -442,16 +443,16 @@ def history(history_obj, history_list, args=None):
     count = 10
     if args and args[0].isdigit():
         count = int(args[0])
-        
+
     # Limit count
     count = min(count, len(history_list))
-    
+
     if count <= 0:
         return "No history available"
-        
+
     # Get last N commands
     last_commands = history_list[-count:]
-    
+
     result = []
     for i, cmd in enumerate(last_commands):
         result.append(f"{len(history_list) - count + i + 1:4}  {cmd}")
@@ -461,7 +462,7 @@ def history(history_obj, history_list, args=None):
 def build(args=None):
     """
     Build the project.
-    
+
     Args:
         args: Command arguments
     """
@@ -486,10 +487,10 @@ def symlink(target, link_name):
 async def build(*args):
     """
     Build project components using parallel build processes.
-    
+
     Args:
         *args: Build arguments (component name and options)
-        
+
     Returns:
         Build status message
     """
@@ -497,12 +498,12 @@ async def build(*args):
         component = "all"
     else:
         component = args[0]
-    
+
     # Parse options from arguments
     incremental = True
     silent = False
     sequential = False
-    
+
     for arg in args:
         if arg.startswith("--"):
             option = arg[2:]
@@ -512,21 +513,21 @@ async def build(*args):
                 silent = True
             elif option == "sequential":
                 sequential = True
-    
+
     # Create a nice build box to display build options
-    build_box = Box(style='light', title='Build Options')
+    build_box = Box(style="light", title="Build Options")
     build_content = [
         f"Component: {Text.style(component if component != '--help' else 'help', color='cyan', bold=True)}",
         f"Mode: {Text.style('Incremental' if incremental else 'Full', color='yellow')}",
-        f"Type: {Text.style('Sequential' if sequential else 'Parallel', color='green')}"
+        f"Type: {Text.style('Sequential' if sequential else 'Parallel', color='green')}",
     ]
     build_lines = build_box.draw(build_content)
     for line in build_lines:
         print(line)
-    
+
     # If --help was specified, just show the build options and return
-    if component == '--help' or 'help' in args:
-        help_box = Box(style='double', title='Build Help')
+    if component == "--help" or "help" in args:
+        help_box = Box(style="double", title="Build Help")
         help_content = [
             Text.style("USAGE:", color="yellow", bold=True),
             "build [options] [target]",
@@ -542,35 +543,37 @@ async def build(*args):
             "",
             Text.style("PARALLELISM:", color="yellow", bold=True),
             "  By default, builds run in parallel processes for maximum speed.",
-            "  Use --sequential flag to build projects one at a time instead."
+            "  Use --sequential flag to build projects one at a time instead.",
         ]
         help_lines = help_box.draw(help_content)
         return "\n".join(help_lines)
-    
+
     # Try to find config in current directory
-    config_path = os.path.join(os.getcwd(), 'project.yaml')
+    config_path = os.path.join(os.getcwd(), "project.yaml")
     if os.path.exists(config_path):
         config = load_config(config_path)
     else:
         # No config found
-        error_box = Box(style='heavy', title='Build Error')
+        error_box = Box(style="heavy", title="Build Error")
         error_content = ["No project.yaml found in current directory."]
         error_lines = error_box.draw(error_content)
         return "\n".join(error_lines)
-    
+
     project_dirs = config.get("project_dirs", ["."])
-    
+
     if not project_dirs:
-        error_box = Box(style='heavy', title='Build Error')
+        error_box = Box(style="heavy", title="Build Error")
         error_content = ["No project directories defined in configuration."]
         error_lines = error_box.draw(error_content)
         return "\n".join(error_lines)
-    
+
     # Check if we should use parallel or sequential build
     if sequential:
         # Use original sequential build
         for project_dir in project_dirs:
-            log(f"Initializing BuildEngine for {Text.style(project_dir, color='cyan')}...")
+            log(
+                f"Initializing BuildEngine for {Text.style(project_dir, color='cyan')}..."
+            )
             build_engine = BuildEngine(project_dir)
 
             try:
@@ -578,7 +581,7 @@ async def build(*args):
                     component=component,
                     incremental=incremental,
                     multi_threaded=True,
-                    silent=silent
+                    silent=silent,
                 )
                 if result:
                     log(f"Successfully built {component} in {project_dir}.")
@@ -588,9 +591,9 @@ async def build(*args):
             except Exception as e:
                 error(f"Build failed in {project_dir}: {str(e)}")
                 return f"Build failed in {project_dir}: {str(e)}"
-        
+
         # Create success box
-        success_box = Box(style='double', title='Build Success')
+        success_box = Box(style="double", title="Build Success")
         success_content = ["All projects built successfully."]
         success_lines = success_box.draw(success_content)
         return "\n".join(success_lines)
@@ -602,23 +605,25 @@ async def build(*args):
                 project_dirs=project_dirs,
                 component=component,
                 incremental=incremental,
-                silent=silent
+                silent=silent,
             )
-            
+
             if success:
                 # Create success box
-                success_box = Box(style='double', title='Build Success')
+                success_box = Box(style="double", title="Build Success")
                 success_content = ["All projects built successfully in parallel."]
                 success_lines = success_box.draw(success_content)
                 return "\n".join(success_lines)
             else:
                 # Create error box
-                error_box = Box(style='heavy', title='Build Failed')
+                error_box = Box(style="heavy", title="Build Failed")
                 error_content = ["Some parallel builds failed. See above for details."]
                 error_lines = error_box.draw(error_content)
                 return "\n".join(error_lines)
         except AttributeError:
             # If the ParallelBuildManager doesn't have the build_all method
             # (this is a fallback for compatibility)
-            warning("Parallel build manager not available, falling back to sequential build.")
-            return await build(*args, '--sequential')
+            warning(
+                "Parallel build manager not available, falling back to sequential build."
+            )
+            return await build(*args, "--sequential")
