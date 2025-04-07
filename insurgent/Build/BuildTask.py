@@ -1,5 +1,7 @@
 import time
-from insurgent.Logging.logger import error, info, warning, success
+
+from insurgent.Logging.logger import error, info, success, warning
+
 
 class BuildTask:
     """

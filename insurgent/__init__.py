@@ -1,7 +1,8 @@
 import sys
+
+from insurgent.Logging.logger import error
 from insurgent.Meta.version import VERSION
 from insurgent.Shell.Shell import Shell
-from insurgent.Logging.logger import error
 
 __version__ = VERSION
 
@@ -15,13 +16,13 @@ def main():
 
     if len(sys.argv) > 1:
         # Run a single command
-        from insurgent.Shell.executor import run_command
+        from insurgent.Shell.Executor import run_command
 
         command_line = " ".join(sys.argv[1:])
         return 0 if run_command(command_line) else 1
 
     # Run interactive shell
-    from insurgent.Shell.executor import run_shell
+    from insurgent.Shell.Executor import run_shell
 
     try:
         return run_shell()

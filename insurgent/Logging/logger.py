@@ -1,18 +1,10 @@
-#!/usr/bin/env python3
-# Copyright (c) InsurgeNT Project
-# SPDX-License-Identifier: Apache-2.0
-
-"""
-Logging utility functions for the InsurgeNT project.
-"""
-
 import datetime
 import os
 import sys
 
 from insurgent.Logging.terminal import *
-from insurgent.TUI.text import Text
-from insurgent.TUI.box import Box
+from insurgent.TUI.Box import Box
+from insurgent.TUI.Text import Text
 
 
 def write_to_log_file(message):

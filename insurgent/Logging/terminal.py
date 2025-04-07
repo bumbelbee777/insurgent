@@ -1,12 +1,3 @@
-#!/usr/bin/env python3
-# Copyright (c) InsurgeNT Project
-# SPDX-License-Identifier: Apache-2.0
-
-"""
-Terminal color and styling constants.
-Provides basic ANSI color codes and symbols for terminal output.
-"""
-
 # Define ANSI color and style codes directly
 RESET = "\033[0m"
 BOLD = "\033[1m"

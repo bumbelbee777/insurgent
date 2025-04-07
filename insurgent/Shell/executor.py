@@ -1,14 +1,14 @@
 import os
-import sys
 import shlex
 import shutil
 import subprocess
+import sys
 import threading
 from pathlib import Path
 
-from .history import History
+from ..TUI.Text import Text
 from .config import Config
-from ..TUI.text import Text
+from .History import History
 
 
 class Executor:

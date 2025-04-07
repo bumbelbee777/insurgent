@@ -3,9 +3,9 @@ Tab completion for the InsurgeNT Shell.
 """
 
 import os
-import sys
 import re
-from typing import Dict, List, Optional, Callable, Any
+import sys
+from typing import Any, Callable, Dict, List, Optional
 
 
 class Completer:

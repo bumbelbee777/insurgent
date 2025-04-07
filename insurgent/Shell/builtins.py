@@ -5,21 +5,22 @@ Built-in commands for the InsurgeNT Shell.
 import asyncio
 import os
 import os.path
-import sys
 import shutil
+import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
+
+from insurgent.Build.build import build as run_build
 from insurgent.Build.BuildEngine import BuildEngine
 from insurgent.Build.ParallelBuildManager import ParallelBuildManager
 from insurgent.Logging.logger import error, log, warning
 from insurgent.Logging.terminal import *
 from insurgent.Meta.config import load_config
-from insurgent.TUI.box import Box
-from insurgent.TUI.text import Text
-from insurgent.TUI.table import Table
 from insurgent.Meta.version import about as version_about
-from insurgent.Build.build import build as run_build
+from insurgent.TUI.Box import Box
+from insurgent.TUI.Table import Table
+from insurgent.TUI.Text import Text
 
 
 def about(args=None):

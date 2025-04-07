@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
-from unittest.mock import patch, MagicMock
 
 from insurgent.Build.build import build
 from insurgent.Meta.config import load_config

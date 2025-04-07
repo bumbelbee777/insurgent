@@ -29,3 +29,4 @@
     - `as`      - Assembler flags.
 * `subprojects`   - The subproject(s) of your main project, specified as subdirectories.
 * `ignore`        - A list of file(s)/folder(s) to ignore when resolving source files.
+* `include_paths` - Include paths to pass to the compiler, they're resolved automatically by default.

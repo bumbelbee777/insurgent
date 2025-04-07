@@ -1,5 +1,5 @@
-from .text import Text
-from .box import Box
+from .Box import Box
+from .Text import Text
 
 
 class Table:

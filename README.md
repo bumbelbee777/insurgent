@@ -77,6 +77,54 @@ bootstrap:
 pip install insurgent
 ```
 
+### Development Setup
+
+For development, InsurgeNT provides setup scripts to create a virtual environment and install dependencies:
+
+#### On Linux/macOS:
+
+```bash
+# Setup development environment
+./setup.sh
+
+# With additional options
+./setup.sh --venv=custom_venv --hooks --lint
+```
+
+#### On Windows:
+
+```cmd
+# Setup development environment
+setup.bat
+
+# With additional options
+setup.bat --venv=custom_venv --hooks --lint
+```
+
+### Linting
+
+To run linting tools on your code:
+
+#### On Linux/macOS:
+
+```bash
+# Check and format code
+./lint.sh
+
+# Only check code (for CI)
+./lint.sh --check
+```
+
+#### On Windows:
+
+```cmd
+# Check and format code
+lint.bat
+
+# Only check code (for CI)
+lint.bat --check
+```
+
 ## Usage
 
 After installation, you can run the development shell by executing:
@@ -99,9 +147,9 @@ InsurgeNT includes a powerful build system for C/C++ projects with features like
 - Incremental builds
 - Dependency tracking
 - Multiple compiler support
-- Parallel compilation for maximum performance
+- Parallel and fully asynchronous compilation for maximum performance
 - Cross-platform compatibility
 
 ## License
 
-MIT
+InsurgeNT is licensed under the [MIT License](LICENSE)

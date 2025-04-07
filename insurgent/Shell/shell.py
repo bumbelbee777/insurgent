@@ -3,15 +3,16 @@ InsurgeNT Shell class - main entry point for the interactive shell
 """
 
 import os
-import sys
 import shlex
+import sys
 import time
 from typing import Dict, List, Optional, Tuple
 
 from insurgent.Logging.terminal import *
+
 from .config import Config
-from .history import History
-from .executor import Executor
+from .Executor import Executor
+from .History import History
 
 
 class Shell:

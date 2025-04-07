@@ -5,12 +5,15 @@ this_directory = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
+with open(os.path.join(this_directory, 'requirements.txt'), encoding='utf-8') as f:
+    requirements = [line.strip() for line in f.readlines() if line.strip()]
+
 setup(
     name="insurgent",
     version="0.1.0",
     author="InsurgeNT Team",
     author_email="bumbelbee437167@gmail.com",
-    description="A modern dev shell and build system for C/C++ projects",
+    description="A modern dev shell and build system for C/C++ projects with parallel build support",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/bumbelbee777/insurgent",
@@ -30,9 +33,11 @@ setup(
     entry_points={
         "console_scripts": [
             "insurgent=insurgent:main",
+            "int=insurgent:main",
         ],
     },
-    install_requires=[
-        "PyYAML",
-    ],
+    install_requires=requirements,
+    package_data={
+        "insurgent": ["requirements.txt"],
+    },
 ) 

@@ -1,18 +1,33 @@
 [build-system]
-requires = ["setuptools ~= 68.0"]
+requires = ["setuptools >= 68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "insurgent"
 version = "0.1.0"
-description = "A build environment and dev shell for make-based C/C++ projects."
+description = "A modern dev shell and build system for C/C++ projects with parallel build support"
 authors = [
     { name = "bumblebee777", email = "bumbelbee437167@gmail.com" }
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.8"
 license = { text = "MIT" }
 dynamic = ["dependencies"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: System :: Shells",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/bumbelbee777/insurgent"
+"Bug Tracker" = "https://github.com/bumbelbee777/insurgent/issues"
 
 [project.scripts]
 insurgent = "insurgent:main"
@@ -26,3 +41,16 @@ dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools.package-data]
 "insurgent" = ["requirements.txt"]
+
+[tool.black]
+line-length = 88
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "--cov=insurgent --cov-report=xml"

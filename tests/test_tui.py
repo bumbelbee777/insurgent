@@ -1,14 +1,14 @@
-import unittest
-import sys
 import os
+import sys
+import unittest
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from insurgent.TUI.box import Box
-from insurgent.TUI.text import Text
-from insurgent.TUI.table import Table
-from insurgent.TUI.theme import Theme
+from insurgent.TUI.Box import Box
+from insurgent.TUI.Table import Table
+from insurgent.TUI.Text import Text
+from insurgent.TUI.Theme import Theme
 
 
 class TestText(unittest.TestCase):

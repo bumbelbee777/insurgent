@@ -14,7 +14,7 @@ root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if root not in sys.path:
     sys.path.insert(0, root)
 
-VERSION = "0.1.0"
+VERSION = "0.1.0-rc1"
 
 
 def about():

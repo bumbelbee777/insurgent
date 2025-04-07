@@ -1,18 +1,18 @@
 import asyncio
-import os
-import time
-import threading
 import multiprocessing
-from queue import Queue, Empty
+import os
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
+from queue import Empty, Queue
 
+from insurgent.Build.build import build, clean
 from insurgent.Build.BuildEngine import BuildEngine
 from insurgent.Build.BuildTask import BuildTask
-from insurgent.Build.build import build, clean
-from insurgent.Logging.logger import error, info, warning, success
-from insurgent.TUI.box import Box
-from insurgent.TUI.text import Text
+from insurgent.Logging.logger import error, info, success, warning
 from insurgent.Shell.Shell import Shell
+from insurgent.TUI.Box import Box
+from insurgent.TUI.Text import Text
 
 
 class ParallelBuildManager:

@@ -1,4 +1,4 @@
-from .text import Text
+from .Text import Text
 
 # Default theme definitions
 DEFAULT_THEMES = {

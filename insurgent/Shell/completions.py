@@ -4,9 +4,9 @@ Provides utilities for tab completion of commands, paths, and arguments.
 """
 
 import os
-import sys
 import re
-from typing import Dict, List, Optional, Callable, Any
+import sys
+from typing import Any, Callable, Dict, List, Optional
 
 from insurgent.Logging.terminal import *
 

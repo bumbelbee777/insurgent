@@ -1,5 +1,4 @@
-from .text import Text
-
+from .Text import Text
 
 # Box drawing characters for different styles
 BOX_STYLES = {

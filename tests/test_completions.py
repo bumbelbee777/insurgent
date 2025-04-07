@@ -1,7 +1,7 @@
 import os
 import sys
-import unittest
 import tempfile
+import unittest
 from unittest.mock import MagicMock, patch
 
 # Add insurgent module to path if needed

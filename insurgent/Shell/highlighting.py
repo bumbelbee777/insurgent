@@ -4,21 +4,20 @@ Provides utilities for highlighting shell commands and code.
 """
 
 import re
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Any, Dict, List, Optional, Tuple
 
-from ..TUI.text import Text
 from ..Logging.terminal import (
-    RESET,
     BOLD,
-    FG_RED,
-    FG_GREEN,
-    FG_YELLOW,
     FG_BLUE,
-    FG_MAGENTA,
     FG_CYAN,
+    FG_GREEN,
+    FG_MAGENTA,
+    FG_RED,
     FG_WHITE,
+    FG_YELLOW,
+    RESET,
 )
-
+from ..TUI.Text import Text
 
 # Regex patterns for different token types
 PATTERNS = {

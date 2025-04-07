@@ -11,12 +11,12 @@ from pathlib import Path
 
 import yaml
 
-from insurgent.Logging.logger import error, log, info, warning, success
+from insurgent.Logging.logger import error, info, log, success, warning
 from insurgent.Logging.terminal import *
 from insurgent.Meta.config import load_config, validate_config
-from insurgent.TUI.box import Box
-from insurgent.TUI.text import Text
-from insurgent.TUI.table import Table
+from insurgent.TUI.Box import Box
+from insurgent.TUI.Table import Table
+from insurgent.TUI.Text import Text
 
 
 class BuildEngine:
@@ -269,6 +269,43 @@ class BuildEngine:
 
         return source_files
 
+    def _find_include_dirs(self):
+        """Find all include directories for the project"""
+        include_dirs = set()
+
+        # Add include paths from project.yaml if specified
+        if "include_paths" in self.config:
+            for path in self.config["include_paths"]:
+                abs_path = os.path.normpath(os.path.join(self.project_path, path))
+                if os.path.exists(abs_path):
+                    include_dirs.add(abs_path)
+                else:
+                    warning(f"Include path {path} does not exist, skipping.", use_box=True)
+
+        # Add include directories from project_dirs
+        project_dirs = self.config.get("project_dirs", [])
+        if not project_dirs:
+            project_dirs = ["."]
+
+        # Normalize project dirs to paths
+        project_dirs = [
+            os.path.normpath(os.path.join(self.project_path, d)) for d in project_dirs
+        ]
+
+        # Search for standard include directory names
+        include_dir_names = ["inc", "include", "includes"]
+        for project_dir in project_dirs:
+            if not os.path.exists(project_dir):
+                continue
+
+            # Search recursively for include directories
+            for root, dirs, _ in os.walk(project_dir):
+                for dir_name in dirs:
+                    if dir_name.lower() in include_dir_names:
+                        include_dirs.add(os.path.normpath(os.path.join(root, dir_name)))
+
+        return list(include_dirs)
+
     def _get_object_file_path(self, source_file):
         """Get the path to the object file for a source file"""
         rel_path = os.path.relpath(source_file, self.project_path)
@@ -299,7 +336,7 @@ class BuildEngine:
             return False
 
         # Add include directories
-        include_dirs = self.config.get("include_dirs", [])
+        include_dirs = self._find_include_dirs()
         include_flags = " ".join(f"-I{dir}" for dir in include_dirs)
 
         # Add defines
@@ -313,6 +350,8 @@ class BuildEngine:
             # Display compilation progress using styled text
             rel_path = os.path.relpath(source_file, self.project_path)
             info(f"Compiling {Text.style(rel_path, color='cyan')}...")
+            if include_dirs:
+                info(f"Include paths: {', '.join(include_dirs)}")
 
         # Execute the compilation command
         try:
@@ -802,6 +841,7 @@ class BuildEngine:
             return {}
 
         source_files = self._find_source_files()
+        include_dirs = self._find_include_dirs()
 
         # Create project information
         info = {
@@ -811,7 +851,7 @@ class BuildEngine:
             "language": self.config.get("language", "c++"),
             "compiler": self.cxx_compiler,
             "source_files": len(source_files),
-            "include_dirs": self.config.get("include_dirs", []),
+            "include_dirs": include_dirs,
             "libs": self.config.get("libs", []),
             "output": self.config.get("output", ""),
             "project_path": self.project_path,

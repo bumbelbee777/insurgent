@@ -1,8 +1,9 @@
 import os
+
 import yaml
 
-from insurgent.Logging.logger import error, warning, info
-from insurgent.TUI.text import Text
+from insurgent.Logging.logger import error, info, warning
+from insurgent.TUI.Text import Text
 
 
 class Config:
