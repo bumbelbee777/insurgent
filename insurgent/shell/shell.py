@@ -2,8 +2,8 @@
 InsurgeNT Shell class - main entry point for the interactive shell
 """
 
-import os
 import asyncio
+import os
 from typing import Optional
 
 from rich.console import Console

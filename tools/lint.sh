@@ -75,10 +75,10 @@ fi
 # Run isort
 if [ "$CHECK_MODE" = "true" ]; then
     echo "Checking import sorting with isort..."
-    $PYTHON -m isort --check insurgent tests
+    $PYTHON -m isort --check --settings-path=pyproject.toml insurgent tests
 else
     echo "Sorting imports with isort..."
-    $PYTHON -m isort insurgent tests
+    $PYTHON -m isort --settings-path=pyproject.toml insurgent tests
 fi
 
 # Run flake8 (always in check mode)

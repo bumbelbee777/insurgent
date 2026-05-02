@@ -83,10 +83,10 @@ if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 REM Run isort
 if "%CHECK_MODE%"=="true" (
     echo Checking import sorting with isort...
-    %PYTHON% -m isort --check "%PROJECT_ROOT%\insurgent" "%PROJECT_ROOT%\tests"
+    %PYTHON% -m isort --check --settings-path="%PROJECT_ROOT%\pyproject.toml" "%PROJECT_ROOT%\insurgent" "%PROJECT_ROOT%\tests"
 ) else (
     echo Sorting imports with isort...
-    %PYTHON% -m isort "%PROJECT_ROOT%\insurgent" "%PROJECT_ROOT%\tests"
+    %PYTHON% -m isort --settings-path="%PROJECT_ROOT%\pyproject.toml" "%PROJECT_ROOT%\insurgent" "%PROJECT_ROOT%\tests"
 )
 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
