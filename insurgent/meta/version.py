@@ -62,8 +62,13 @@ def help():
     print("        remove [name]          Remove a depency.")
     print("	       list                   List all project dependencies.")
     print(
-        f"  {GREEN}test{RESET} [component] [options] - Run tests for the specified component."
+        f"  {GREEN}test{RESET} (alias {GREEN}t{RESET}) — Build and run the unit test executable "
+        f"from the {GREEN}unit_tests{RESET} section of project.yaml."
     )
     print("      Options:")
-    print("        " + f"{BLUE}-v{RESET}          Run tests in verbose mode.")
+    print(
+        "        "
+        + f"{BLUE}--no-incremental{RESET}   Recompile all test sources."
+        + f"        {BLUE}--silent{RESET}   Quieter build output."
+    )
     print()

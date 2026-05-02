@@ -73,10 +73,10 @@ set PYTHONPATH=%PROJECT_ROOT%;%PYTHONPATH%
 REM Run Black
 if "%CHECK_MODE%"=="true" (
     echo Checking code formatting with Black...
-    %PYTHON% -m black --check "%PROJECT_ROOT%\insurgent" "%PROJECT_ROOT%\tests"
+    %PYTHON% -m black --check --config="%PROJECT_ROOT%\pyproject.toml" --target-version py310 "%PROJECT_ROOT%\insurgent" "%PROJECT_ROOT%\tests"
 ) else (
     echo Formatting code with Black...
-    %PYTHON% -m black "%PROJECT_ROOT%\insurgent" "%PROJECT_ROOT%\tests"
+    %PYTHON% -m black --config="%PROJECT_ROOT%\pyproject.toml" --target-version py310 "%PROJECT_ROOT%\insurgent" "%PROJECT_ROOT%\tests"
 )
 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 

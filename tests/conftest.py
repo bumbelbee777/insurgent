@@ -7,7 +7,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from insurgent.shell.Shell import command_history
+from insurgent.shell.shell import command_history
 
 
 @pytest.fixture(autouse=True)

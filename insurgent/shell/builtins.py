@@ -2,14 +2,14 @@
 Built-in commands for the InsurgeNT Shell.
 """
 
+import asyncio
 import os
 import shutil
-from typing import Optional, List
-import asyncio
+from typing import List, Optional
 
+from insurgent.build.BuildEngine import BuildEngine
 from insurgent.logging.logger import error, info, log, success, warning
 from insurgent.rich_utils import print_styled
-from insurgent.build.BuildEngine import BuildEngine
 
 # ANSI color codes
 BLUE = "\033[34m"
@@ -18,7 +18,9 @@ RESET = "\033[0m"
 
 def about(*args):
     """Show version information."""
-    from insurgent.meta.version import VERSION, about as version_about
+    from insurgent.meta.version import VERSION
+    from insurgent.meta.version import about as version_about
+
     return version_about()
 
 
@@ -40,6 +42,7 @@ Available commands:
   pwd       - Show current directory
   history   - Show command history
   build     - Build project
+  test      - Build and run unit tests (see unit_tests in project.yaml)
 """
     return help_text
 
@@ -152,7 +155,8 @@ def cwd(*args):
 
 def history(*args):
     """Show command history."""
-    from .History import History
+    from .history import History
+
     history = History()
     return "\n".join(history.get_last_n(10))
 
@@ -172,6 +176,25 @@ async def build(*args):
             build_subprojects=build_subprojects,
         )
         return "" if ok else f"Build failed: {reason}"
+
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+
+async def test(*args):
+    """Compile the unit test executable and run it (see ``unit_tests`` in project.yaml)."""
+    try:
+        engine = BuildEngine(os.getcwd())
+        incremental = "--no-incremental" not in args
+        silent = "--silent" in args
+
+        ok, detail = await engine.run_unit_tests(
+            incremental=incremental,
+            silent=silent,
+        )
+        if ok:
+            return detail if detail else "Tests passed."
+        return f"Tests failed: {detail}"
 
     except Exception as e:
         return f"Error: {str(e)}"

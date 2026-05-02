@@ -1,15 +1,12 @@
 import datetime
 import os
 import sys
+
 from rich.console import Console
-from rich.text import Text
 from rich.panel import Panel
-from insurgent.rich_utils import (
-    create_panel,
-    style_text,
-    print_panel,
-    print_styled
-)
+from rich.text import Text
+
+from insurgent.rich_utils import create_panel, print_panel, print_styled, style_text
 
 
 def _find_project_root():

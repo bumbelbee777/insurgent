@@ -41,6 +41,25 @@ build --debug mylib
 build --sequential
 ```
 
+### Unit tests (native harness)
+
+Declare an optional `unit_tests` block in `project.yaml` (see [docs/ProjectYAML.md](docs/ProjectYAML.md)). InsurgeNT compiles sources listed there into a separate executable and runs it when you execute:
+
+```
+insurgent test
+# or: insurgent t
+```
+
+From the interactive shell:
+
+```
+test
+```
+
+Use `test --silent` / `test --no-incremental` in the shell, or `insurgent test --silent` / `--no-incremental` on the CLI. A non-zero exit code from the test binary is treated as failure.
+
+For `project_type: library`, the main static library (`output`) is built first and linked into the test executable by default. Use `unit_tests.link_project: false` for a self-contained test binary, or `unit_tests.libraries` to add more archives (paths relative to the project root).
+
 ## Creating a Project
 
 InsurgeNT uses YAML configuration for project definitions. Here's an example:
@@ -128,7 +147,7 @@ lint.bat --check
 After installation, you can run the development shell by executing:
 
 ```
-python -m insurgent.shell
+python -m insurgent
 ```
 
 ### Available Commands
@@ -136,6 +155,7 @@ python -m insurgent.shell
 - `ls`, `cd`, `pwd` - File navigation
 - `mkdir`, `touch`, `rm`, `cp` - File operations
 - `build <project> [options]` - Build a project
+- `test [--silent] [--no-incremental]` - Build and run the unit test executable
 - `history` - Show command history
 
 ## Build System

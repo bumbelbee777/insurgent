@@ -3,8 +3,9 @@ Configuration handler for the InsurgeNT Shell.
 """
 
 import os
-import yaml
 from typing import Dict, Optional
+
+import yaml
 
 from insurgent.logging.logger import error, info, log, success, warning
 

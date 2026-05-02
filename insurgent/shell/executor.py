@@ -2,21 +2,22 @@ import asyncio
 import os
 import shlex
 import subprocess
-from typing import Any, Dict, List, Optional, Tuple, Union
 from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Dict, List, Optional, Tuple, Union
 
-from .config import Config
-from .History import History
 from insurgent.logging.logger import error, info, log, success, warning
 from insurgent.logging.terminal import *
 from insurgent.rich_utils import (
     create_panel,
     create_table,
-    style_text,
     print_panel,
+    print_styled,
     print_table,
-    print_styled
+    style_text,
 )
+
+from .config import Config
+from .history import History
 
 
 class Executor:
@@ -54,6 +55,7 @@ class Executor:
             ls,
             mkdir,
             rm,
+            test,
             touch,
         )
 
@@ -73,6 +75,7 @@ class Executor:
             "pwd": {"func": cwd, "help": "Show current directory"},
             "history": {"func": history, "help": "Show command history"},
             "build": {"func": build, "help": "Build project"},
+            "test": {"func": test, "help": "Build and run unit tests"},
             # Original built-ins
             "alias": {"func": self._manage_aliases, "help": "Manage aliases"},
             "echo": {"func": self._echo, "help": "Print arguments"},
@@ -266,12 +269,7 @@ class Executor:
             Command output as string
         """
         try:
-            result = subprocess.run(
-                args,
-                capture_output=True,
-                text=True,
-                check=False
-            )
+            result = subprocess.run(args, capture_output=True, text=True, check=False)
             self.last_exit_code = result.returncode
             return result.stdout if result.stdout else result.stderr
         except Exception as e:

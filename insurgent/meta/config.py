@@ -4,18 +4,19 @@ Configuration management for InsurgeNT.
 
 import json
 import os
-import yaml
 from typing import Any, Dict, List, Optional
+
+import yaml
 
 from insurgent.logging.logger import error, info, log, success, warning
 from insurgent.logging.terminal import *
 from insurgent.rich_utils import (
     create_panel,
     create_table,
-    style_text,
     print_panel,
+    print_styled,
     print_table,
-    print_styled
+    style_text,
 )
 
 MANDATORY_FIELDS = [
@@ -188,6 +189,7 @@ def validate_config(config: dict) -> bool:
             log(f"WARNING: Project directory '{directory}' does not exist.")
 
     return True
+
 
 def to_compile_commands(config: dict) -> list:
     """

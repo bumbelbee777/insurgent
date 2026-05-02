@@ -35,8 +35,9 @@ classifiers = [
 insurgent = "insurgent:main"
 int = "insurgent:main"
 
-[tool.setuptools]
-packages = ["insurgent"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["insurgent*"]
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
@@ -46,6 +47,7 @@ dependencies = { file = ["requirements.txt"] }
 
 [tool.black]
 line-length = 88
+target-version = ["py310"]
 include = '\.pyi?$'
 
 [tool.isort]

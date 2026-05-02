@@ -79,6 +79,52 @@ class BuildEngine:
                 os.makedirs(output_dir, exist_ok=True)
 
         self.subproject_engines = self._initialize_subprojects()
+        self._normalize_unit_tests_config()
+
+    def _normalize_unit_tests_config(self) -> None:
+        """Validate and normalise optional ``unit_tests`` from ``project.yaml``."""
+        ut = self.config.get("unit_tests")
+        if ut is None:
+            return
+        if not isinstance(ut, dict):
+            log("unit_tests must be a dictionary; ignoring.")
+            self.config["unit_tests"] = None
+            return
+
+        dirs = ut.get("project_dirs")
+        if isinstance(dirs, str):
+            dirs = [dirs]
+        elif not isinstance(dirs, list):
+            dirs = []
+        dirs = [str(d).strip() for d in dirs if str(d).strip()]
+
+        output = str(ut.get("output", "") or "").strip()
+        if not dirs or not output:
+            log("unit_tests requires non-empty project_dirs and output; ignoring.")
+            self.config["unit_tests"] = None
+            return
+
+        link_project = ut.get("link_project")
+        if link_project is not None and not isinstance(link_project, bool):
+            log("unit_tests.link_project must be a boolean; ignoring unit_tests.")
+            self.config["unit_tests"] = None
+            return
+
+        raw_libs = ut.get("libraries") or []
+        if isinstance(raw_libs, str):
+            raw_libs = [raw_libs]
+        if not isinstance(raw_libs, list):
+            log("unit_tests.libraries must be a string or list; ignoring unit_tests.")
+            self.config["unit_tests"] = None
+            return
+        libraries = [str(p).strip() for p in raw_libs if str(p).strip()]
+
+        self.config["unit_tests"] = {
+            "project_dirs": dirs,
+            "output": output,
+            "link_project": link_project,
+            "libraries": libraries,
+        }
 
     # ------------------------------------------------------------------ config
 
@@ -318,6 +364,192 @@ class BuildEngine:
 
         return include_dirs
 
+    # -------------------------------------------------------------- unit tests
+
+    def _iter_unit_test_dirs(self):
+        ut = self.config.get("unit_tests") or {}
+        for directory in ut.get("project_dirs", []) or []:
+            yield directory, os.path.join(self.project_path, directory)
+
+    def _find_unit_test_sources(self) -> List[str]:
+        """Collect C/C++/ASM sources under configured unit test directories only."""
+        if not self.config.get("unit_tests"):
+            return []
+        ignore_patterns = self.config.get("ignore", []) or []
+        sources: List[str] = []
+
+        for _, dir_path in self._iter_unit_test_dirs():
+            if not os.path.isdir(dir_path):
+                continue
+            for patterns in (self._C_PATTERNS, self._CXX_PATTERNS, self._ASM_PATTERNS):
+                for pattern in patterns:
+                    for file_path in glob.glob(
+                        os.path.join(dir_path, pattern), recursive=True
+                    ):
+                        rel = os.path.relpath(file_path, self.project_path)
+                        if any(ignored in rel for ignored in ignore_patterns):
+                            continue
+                        sources.append(file_path)
+
+        return sorted(set(sources))
+
+    def _get_unit_test_object_path(self, source_file: str) -> str:
+        """Object file under ``.build/unit_tests/`` (separate from the main target)."""
+        rel_path = os.path.relpath(source_file, self.project_path)
+        obj_dir = os.path.join(self.build_dir, "unit_tests", os.path.dirname(rel_path))
+        os.makedirs(obj_dir, exist_ok=True)
+        stem = os.path.splitext(os.path.basename(source_file))[0]
+        return os.path.join(obj_dir, f"{stem}.o")
+
+    def _resolve_test_executable_path(self, output_path: str) -> str:
+        """Resolve the on-disk path for the test runner (e.g. ``.exe`` on Windows)."""
+        if os.path.isfile(output_path):
+            return output_path
+        if os.name == "nt":
+            exe = f"{output_path}.exe"
+            if os.path.isfile(exe):
+                return exe
+        return output_path
+
+    def _project_type_lower(self) -> str:
+        return str(
+            self.config.get("type") or self.config.get("project_type") or "executable"
+        ).lower()
+
+    def _should_link_project_library(self, ut: dict) -> bool:
+        """Whether to link the main ``output`` archive when building the test executable."""
+        explicit = ut.get("link_project")
+        if explicit is False:
+            return False
+        if explicit is True:
+            return True
+        return self._project_type_lower() == "library"
+
+    async def run_unit_tests(
+        self,
+        incremental: bool = True,
+        silent: bool = False,
+    ) -> Tuple[bool, str]:
+        """
+        Build the unit test executable (if configured) and run it.
+
+        Returns ``(success, message)`` where ``success`` matches the subprocess exit code.
+        """
+        ut = self.config.get("unit_tests")
+        if not ut:
+            return False, "no unit_tests configured in project.yaml"
+
+        bootstrap_ok, reason = await self._run_bootstrap()
+        if not bootstrap_ok:
+            return False, f"bootstrap failed: {reason}"
+
+        source_files = self._find_unit_test_sources()
+        if not source_files:
+            return False, "no unit test sources found under unit_tests.project_dirs"
+
+        link_main = self._should_link_project_library(ut)
+        if ut.get("link_project") is True and self._project_type_lower() != "library":
+            return (
+                False,
+                "unit_tests.link_project: true requires project_type: library "
+                "(or omit link_project to use only unit_tests.libraries)",
+            )
+
+        if link_main:
+            main_ok, main_reason = await self.build(
+                incremental=incremental,
+                silent=silent,
+                build_subprojects=False,
+            )
+            if not main_ok:
+                return False, f"main library build failed (needed for tests): {main_reason}"
+
+            main_lib = os.path.join(
+                self.project_path,
+                self.config.get("output", "") or "",
+            )
+            if not os.path.isfile(main_lib):
+                return False, (
+                    f"main project output not found at {main_lib}; "
+                    "check project_type and output"
+                )
+
+        obj_files: List[str] = []
+        for source_file in source_files:
+            file_type = self._file_type(source_file)
+            if file_type is None:
+                continue
+
+            obj_file = self._get_unit_test_object_path(source_file)
+            obj_files.append(obj_file)
+
+            if (
+                incremental
+                and not self._has_file_changed(source_file)
+                and os.path.exists(obj_file)
+            ):
+                if not silent:
+                    log(
+                        "Skipping unchanged unit test file: "
+                        f"{os.path.relpath(source_file, self.project_path)}"
+                    )
+                continue
+
+            ok = await self._compile_file(source_file, obj_file, file_type, silent)
+            if not ok:
+                return False, "unit test compilation failed"
+
+        output_file = os.path.join(self.project_path, ut["output"])
+        if obj_files:
+            extra_libs: List[str] = []
+            if link_main:
+                extra_libs.append(
+                    os.path.join(
+                        self.project_path,
+                        self.config.get("output", "") or "",
+                    )
+                )
+            for rel in ut.get("libraries") or []:
+                extra_libs.append(os.path.join(self.project_path, rel))
+
+            if not await self._link_executable(
+                obj_files, output_file, silent, extra_libs=extra_libs
+            ):
+                return False, "unit test link failed"
+
+        self._save_build_cache()
+
+        exe = self._resolve_test_executable_path(output_file)
+        if not os.path.isfile(exe):
+            return False, f"unit test executable not found at {exe}"
+
+        if not silent:
+            log(f"Running tests: {os.path.relpath(exe, self.project_path)}")
+
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                exe,
+                cwd=self.project_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout_b, stderr_b = await proc.communicate()
+            code = proc.returncode if proc.returncode is not None else 1
+            out = (stdout_b or b"").decode(errors="replace").strip()
+            err = (stderr_b or b"").decode(errors="replace").strip()
+            detail = ""
+            if out:
+                detail += out
+            if err:
+                detail += ("\n" if detail else "") + err
+            if code == 0:
+                msg = detail if detail else "tests passed"
+                return True, msg
+            tail = detail if detail else f"exit code {code}"
+            return False, tail
+        except Exception as e:
+            return False, str(e)
+
     # ------------------------------------------------------------- flags helpers
 
     def _get_compiler_flags(self) -> Dict[str, str]:
@@ -446,6 +678,7 @@ class BuildEngine:
         obj_files: List[str],
         output_file: str,
         silent: bool = False,
+        extra_libs: Optional[List[str]] = None,
     ) -> bool:
         """Link ``obj_files`` into the final executable at ``output_file``."""
         flags = self._get_compiler_flags()
@@ -453,7 +686,8 @@ class BuildEngine:
 
         os.makedirs(os.path.dirname(output_file) or ".", exist_ok=True)
 
-        cmd = [self.ld, "-o", output_file, *obj_files]
+        libs = [p for p in (extra_libs or []) if p]
+        cmd = [self.ld, "-o", output_file, *obj_files, *libs]
         if ld_flags:
             cmd.extend(ld_flags.split())
 
@@ -686,6 +920,26 @@ class BuildEngine:
                     except Exception:
                         pass
 
+            ut = self.config.get("unit_tests")
+            if isinstance(ut, dict) and ut.get("output"):
+                ut_out = os.path.join(self.project_path, ut["output"])
+                candidates = [ut_out]
+                if os.name == "nt":
+                    candidates.append(f"{ut_out}.exe")
+                for p in candidates:
+                    if os.path.isfile(p):
+                        try:
+                            os.remove(p)
+                        except Exception:
+                            pass
+
+            ut_obj_root = os.path.join(self.build_dir, "unit_tests")
+            if os.path.isdir(ut_obj_root):
+                try:
+                    shutil.rmtree(ut_obj_root)
+                except Exception:
+                    pass
+
             self.build_cache = {
                 "file_hashes": {},
                 "last_build_time": 0,
@@ -722,4 +976,5 @@ class BuildEngine:
             "subprojects": list(self.subproject_engines.keys())
             if self.subproject_engines
             else [],
+            "unit_tests": self.config.get("unit_tests"),
         }

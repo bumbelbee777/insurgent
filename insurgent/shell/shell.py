@@ -11,24 +11,27 @@ from rich.panel import Panel
 from rich.theme import Theme
 
 from .config import Config
-from .Executor import Executor
-from .History import History
+from .executor import Executor
+from .history import History
 
 # Custom theme for rich
-INSURGENT_THEME = Theme({
-    "info": "cyan",
-    "warning": "yellow",
-    "error": "red",
-    "success": "green",
-    "prompt": "bold blue",
-    "code": "bold green",
-    "path": "bold cyan",
-    "version": "bold yellow",
-})
+INSURGENT_THEME = Theme(
+    {
+        "info": "cyan",
+        "warning": "yellow",
+        "error": "red",
+        "success": "green",
+        "prompt": "bold blue",
+        "code": "bold green",
+        "path": "bold cyan",
+        "version": "bold yellow",
+    }
+)
 
 # Command symbols
 COMMAND_SYMBOLS = {
     "build": "⚡",
+    "test": "🧪",
     "clean": "🧹",
     "rebuild": "🔄",
     "scorch": "🔥",
@@ -73,12 +76,14 @@ class Shell:
 
     def run(self):
         """Run the interactive shell."""
-        self.console.print(Panel.fit(
-            "[bold green]✨ InsurgeNT Shell[/]\n"
-            "[dim]Type 'help' for available commands, 'exit' to quit.[/]",
-            title="Welcome",
-            border_style="green"
-        ))
+        self.console.print(
+            Panel.fit(
+                "[bold green]✨ InsurgeNT Shell[/]\n"
+                "[dim]Type 'help' for available commands, 'exit' to quit.[/]",
+                title="Welcome",
+                border_style="green",
+            )
+        )
 
         self.running = True
 
@@ -105,7 +110,9 @@ class Shell:
 
                 # Print output if any
                 if output:
-                    if hasattr(output, "__rich_console__") or hasattr(output, "__rich__"):
+                    if hasattr(output, "__rich_console__") or hasattr(
+                        output, "__rich__"
+                    ):
                         self.console.print(output)
                     else:
                         print(output)
@@ -169,12 +176,14 @@ class ShellInterface:
             int: Exit code (0 for success)
         """
         try:
-            self.console.print(Panel.fit(
-                "[bold green]✨ InsurgeNT Shell[/]\n"
-                "[dim]Type 'help' for available commands, 'exit' to quit.[/]",
-                title="Welcome",
-                border_style="green"
-            ))
+            self.console.print(
+                Panel.fit(
+                    "[bold green]✨ InsurgeNT Shell[/]\n"
+                    "[dim]Type 'help' for available commands, 'exit' to quit.[/]",
+                    title="Welcome",
+                    border_style="green",
+                )
+            )
 
             while True:
                 try:
@@ -185,7 +194,9 @@ class ShellInterface:
                     output = self.executor.execute(command)
 
                     if output:
-                        if hasattr(output, "__rich_console__") or hasattr(output, "__rich__"):
+                        if hasattr(output, "__rich_console__") or hasattr(
+                            output, "__rich__"
+                        ):
                             self.console.print(output)
                         else:
                             print(output)
@@ -219,16 +230,16 @@ class ShellInterface:
         """
         try:
             output = self.executor.execute(cmd)
-            
+
             # Handle Rich text objects
             if hasattr(output, "__rich_console__") or hasattr(output, "__rich__"):
                 with self.console.capture() as capture:
                     self.console.print(output)
                 return capture.get()
-            
+
             # Handle regular strings
             return str(output) if output is not None else None
-            
+
         except Exception as e:
             return f"[error]Error: {str(e)}[/]"
         finally:

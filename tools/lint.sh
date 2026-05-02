@@ -66,10 +66,10 @@ echo "Using Python at $PYTHON"
 # Run Black
 if [ "$CHECK_MODE" = "true" ]; then
     echo "Checking code formatting with Black..."
-    $PYTHON -m black --check insurgent tests
+    $PYTHON -m black --check --config=pyproject.toml --target-version py310 insurgent tests
 else
     echo "Formatting code with Black..."
-    $PYTHON -m black insurgent tests
+    $PYTHON -m black --config=pyproject.toml --target-version py310 insurgent tests
 fi
 
 # Run isort

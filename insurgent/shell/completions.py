@@ -27,6 +27,7 @@ commands = {
     "cp": [],
     "cat": [],
     "build": [],
+    "test": [],
     "clean": [],
     "scorch": [],
     "bootstrap": [],

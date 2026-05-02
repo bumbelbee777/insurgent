@@ -30,3 +30,10 @@
 * `subprojects`   - The subproject(s) of your main project, specified as subdirectories.
 * `ignore`        - A list of file(s)/folder(s) to ignore when resolving source files.
 * `include_paths` - Include paths to pass to the compiler, they're resolved automatically by default.
+* `unit_tests`    - Optional native unit test harness (separate executable from the main ``output``).
+    - ``project_dirs`` - One directory or a list of directories containing test-only sources (scanned like main sources: ``.c``, ``.cpp``, …).
+    - ``output``     - Relative path for the linked test executable (for example ``bin/run_tests``). InsurgeNT compiles sources under ``project_dirs``, links this binary, then runs it when you invoke ``insurgent test`` or the shell command ``test``.
+    - ``link_project`` - Optional boolean. If ``true``, the main ``output`` archive is appended when linking tests (requires ``project_type: library``). If ``false``, that archive is never linked. If omitted, InsurgeNT links the main archive automatically **only when** ``project_type`` is ``library`` (runs a normal main build first so the static library exists).
+    - ``libraries``  - Optional list of extra static library paths **relative to the project root** (for example vendor archives or another subproject’s ``.a``), appended after the test objects when linking.
+
+Executable projects cannot use ``link_project: true``. To test code from an executable-shaped tree, extract it into a ``library`` target or list archives under ``libraries``.

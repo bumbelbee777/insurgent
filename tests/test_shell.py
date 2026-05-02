@@ -3,23 +3,32 @@ import sys
 import unittest
 from io import StringIO
 from unittest.mock import MagicMock, patch
+
 import pytest
 
 # Add insurgent module to path if needed
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from insurgent.shell.builtins import cat, cd, cp, ls, mkdir, rm, touch
-from insurgent.shell.Shell import (
-    Shell, ShellInterface, add_to_history, load_history, save_history, command_history
+from insurgent.shell.shell import (
+    Shell,
+    ShellInterface,
+    add_to_history,
+    command_history,
+    load_history,
+    save_history,
 )
+
 
 @pytest.fixture
 def shell():
     return Shell()
 
+
 @pytest.fixture
 def shell_interface():
     return ShellInterface()
+
 
 def test_shell_initialization(shell):
     """Test shell initialization."""
@@ -28,40 +37,46 @@ def test_shell_initialization(shell):
     assert shell.history is not None
     assert shell.config is not None
 
+
 def test_shell_interface_initialization(shell_interface):
     """Test shell interface initialization."""
     assert shell_interface.executor is not None
     assert shell_interface.console is not None
 
+
 def test_command_execution(shell):
     """Test command execution."""
-    with patch.object(shell.executor, 'execute') as mock_execute:
+    with patch.object(shell.executor, "execute") as mock_execute:
         mock_execute.return_value = "Test output"
         result = shell.execute_command("test")
         assert result == 0
         mock_execute.assert_called_once_with("test")
 
+
 def test_command_execution_with_error(shell):
     """Test command execution with error."""
-    with patch.object(shell.executor, 'execute') as mock_execute:
+    with patch.object(shell.executor, "execute") as mock_execute:
         mock_execute.side_effect = Exception("Test error")
         result = shell.execute_command("test")
         assert result == 1
 
+
 def test_shell_interface_command_execution(shell_interface):
     """Test shell interface command execution."""
-    with patch.object(shell_interface.executor, 'execute') as mock_execute:
+    with patch.object(shell_interface.executor, "execute") as mock_execute:
         mock_execute.return_value = "Test output"
         result = shell_interface.run_command("test")
         assert result == "Test output"
         mock_execute.assert_called_once_with("test")
 
+
 def test_shell_interface_command_execution_with_error(shell_interface):
     """Test shell interface command execution with error."""
-    with patch.object(shell_interface.executor, 'execute') as mock_execute:
+    with patch.object(shell_interface.executor, "execute") as mock_execute:
         mock_execute.side_effect = Exception("Test error")
         result = shell_interface.run_command("test")
         assert result == "[error]Error: Test error[/]"
+
 
 def test_command_history():
     """Test command history functionality."""
@@ -80,59 +95,66 @@ def test_command_history():
     add_to_history("test2")
     assert len(command_history) == 2
 
+
 def test_history_file_operations(tmp_path):
     """Test history file operations."""
     history_file = tmp_path / "history.txt"
-    
+
     # Add some commands
     add_to_history("test1")
     add_to_history("test2")
-    
+
     # Save history
     save_history(str(history_file))
     assert history_file.exists()
-    
+
     # Clear history
     command_history.clear()
     assert len(command_history) == 0
-    
+
     # Load history
     load_history(str(history_file))
     assert len(command_history) == 2
     assert command_history[0] == "test1"
     assert command_history[1] == "test2"
 
+
 def test_shell_exit(shell):
     """Test shell exit functionality."""
-    with patch.object(shell.executor, 'is_running') as mock_running:
+    with patch.object(shell.executor, "is_running") as mock_running:
         mock_running.return_value = False
         shell.execute_command("exit")
         assert shell.running == False
 
+
 def test_shell_interface_exit(shell_interface):
     """Test shell interface exit functionality."""
-    with patch('builtins.input', return_value="exit"):
-        with patch.object(shell_interface.executor, 'execute') as mock_execute:
+    with patch("builtins.input", return_value="exit"):
+        with patch.object(shell_interface.executor, "execute") as mock_execute:
             mock_execute.return_value = None
             shell_interface.run_shell()
             mock_execute.assert_called_once_with("exit")
 
+
 def test_rich_output_handling(shell_interface):
     """Test handling of Rich output objects."""
+
     class RichOutput:
         def __rich_console__(self, console, options):
             yield "Rich output"
-    
-    with patch.object(shell_interface.executor, 'execute') as mock_execute:
+
+    with patch.object(shell_interface.executor, "execute") as mock_execute:
         mock_execute.return_value = RichOutput()
         result = shell_interface.run_command("test")
         assert "Rich output" in result
 
+
 def test_command_symbols():
     """Test command symbol mapping."""
-    from insurgent.shell.Shell import get_command_symbol
-    
+    from insurgent.shell.shell import get_command_symbol
+
     assert get_command_symbol("build") == "⚡"
+    assert get_command_symbol("test") == "🧪"
     assert get_command_symbol("clean") == "🧹"
     assert get_command_symbol("rebuild") == "🔄"
     assert get_command_symbol("scorch") == "🔥"
@@ -140,6 +162,7 @@ def test_command_symbols():
     assert get_command_symbol("help") == "❓"
     assert get_command_symbol("exit") == "👋"
     assert get_command_symbol("unknown") == ">"
+
 
 class TestShellHistory(unittest.TestCase):
     def setUp(self):
