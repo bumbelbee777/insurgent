@@ -1,18 +1,28 @@
-import asyncio
-import multiprocessing
-import os
-import threading
-import time
-from concurrent.futures import ThreadPoolExecutor
-from queue import Empty, Queue
+"""
+Parallel build task management for InsurgeNT.
+"""
 
-from insurgent.Build.build import build, clean
-from insurgent.Build.BuildEngine import BuildEngine
-from insurgent.Build.BuildTask import BuildTask
-from insurgent.Logging.logger import error, info, success, warning
-from insurgent.Shell.Shell import Shell
-from insurgent.TUI.Box import Box
-from insurgent.TUI.Text import Text
+import asyncio
+import os
+from typing import Dict, List, Optional, Set
+from queue import Queue
+import threading
+from concurrent.futures import ThreadPoolExecutor
+import multiprocessing
+from queue import Empty
+from rich.text import Text
+
+from insurgent.build.BuildTask import BuildTask
+from insurgent.logging.logger import error, info, log, success, warning
+from insurgent.logging.terminal import *
+from insurgent.rich_utils import (
+    create_panel,
+    create_table,
+    style_text,
+    print_panel,
+    print_table,
+    print_styled
+)
 
 
 class ParallelBuildManager:
@@ -133,7 +143,8 @@ class ParallelBuildManager:
 
                 # Log start of task
                 if self.verbose:
-                    print(f"Building {Text(target).bold()}")
+                    target_text = Text(target).bold()
+                    print(f"Building {target_text}")
 
                 # Execute the task
                 task.execute()
@@ -145,17 +156,15 @@ class ParallelBuildManager:
                         self.failed_tasks.add(target)
                         # Log error
                         if self.verbose:
-                            print(
-                                f"Failed to build {Text(target).bold().red()}: {task.error}"
-                            )
+                            target_text = Text(target).bold().red()
+                            print(f"Failed to build {target_text}: {task.error}")
                     else:
                         self.completed_tasks.add(target)
                         # Log completion
                         if self.verbose:
                             duration = task.duration()
-                            print(
-                                f"Built {Text(target).bold().green()} in {duration:.2f}s"
-                            )
+                            target_text = Text(target).bold().green()
+                            print(f"Built {target_text} in {duration:.2f}s")
 
                 # Add the result to the results queue
                 self.results.put(target)
@@ -250,10 +259,9 @@ class ParallelBuildManager:
                                 self.failed_tasks.add(target)
                                 # Log dependency failure
                                 if self.verbose:
-                                    print(
-                                        f"Skipping {Text(target).bold().yellow()}: "
-                                        f"dependency {Text(dep).bold().red()} failed"
-                                    )
+                                    target_text = Text(target).bold().yellow()
+                                    dep_text = Text(dep).bold().red()
+                                    print(f"Skipping {target_text}: dependency {dep_text} failed")
 
                     if blocked:
                         # Notify waiting threads about the status change

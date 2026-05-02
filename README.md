@@ -1,27 +1,26 @@
-# InsurgeNT
+# InsurgeNT ⚙️✨  
+**Integrated Native Toolkit (InsurgeNT)** – a beautiful, modern devshell + build system for C/C++ projects.
 
 [![PyPI version](https://badge.fury.io/py/insurgent.svg)](https://badge.fury.io/py/insurgent)
 
-A modern, powerful development shell and build system for C/C++ projects.
+> A clean, expressive, and fast workflow for native development.  
+> **Simple YAML configs. Stunning output. No boilerplate. No stress.**
 
-## Features
+## ✨ Features
 
-- Intelligent code completion for seamless C/C++ development
-- Powerful build pipeline with incremental compilation
-- Multiple toolchain support for cross-platform development
-- Smart project management with dependency tracking
-- **Parallel builds** across multiple projects and components for maximum performance
-- Custom shell with tab completion
-- Command history management
-- Project configuration via YAML
-- Cross-platform support (Windows, macOS, Linux)
+- ⚡️ **Incremental builds** with parallel + async compilation
+- 📦 **project.yaml**-based config with automatic source/include detection
+- 🧠 **Intelligent project layout** and dependency tracking
+- 💻 **Interactive shell** with tab completion, history, and file ops
+- 🔧 **Multi-compiler** + cross-platform support (Linux, macOS, Windows)
+- 🎨 **Beautiful TUI feedback** with emoji, colors, and clean symbols
 
 ## Getting Started
 
 To start using InsurgeNT, run the shell:
 
 ```
-python -m insurgent.shell
+python -m insurgent # or python -m int
 ```
 
 ### Build Commands
@@ -49,26 +48,25 @@ InsurgeNT uses YAML configuration for project definitions. Here's an example:
 ```yaml
 project: example
 description: An example project
-authors: Your Name
+authors: ["John Doe", "Jane Doe"]
 license: MIT
 version: 0.1.0
 language: c++
 standard: c++20
 compiler: g++
 compiler_flags:
-  global: "-fPIC"
-  common: "-O2 -Wall -Wextra"
-  cpp: "-std=c++20"
-  ld: "-lstdc++"
-project_dirs:
-  - sources
+  - global: "-fPIC"
+  - common: "-O2 -Wall -Wextra"
+  - cpp: "-std=c++20"
+  - ld: "-lstdc++"
+project_dirs: ["sources"]
 project_type: executable
 output: bin/example
 
 # Optional bootstrap step
 bootstrap:
-  task: prepare
-  command: "mkdir -p bin"
+  - task: prepare
+  - command: "mkdir -p bin"
 ```
 
 ## Installation

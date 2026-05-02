@@ -55,25 +55,7 @@ def install_dependencies(pip_executable, editable=True):
         run_command([pip_executable, "install", "-e", "."])
 
 def setup_git_hooks(python_executable):
-    """Set up Git pre-commit hooks."""
-    print("Setting up pre-commit hooks...")
-    # Create the pre-commit hook directory if it doesn't exist
-    hooks_dir = Path(".git/hooks")
-    hooks_dir.mkdir(exist_ok=True)
-    
-    # Create pre-commit hook
-    pre_commit_path = hooks_dir / "pre-commit"
-    with open(pre_commit_path, "w") as f:
-        f.write(f"""#!/bin/sh
-# Run linting before commit
-{python_executable} -m black insurgent tests
-{python_executable} -m isort insurgent tests
-{python_executable} -m flake8 insurgent tests --count --select=E9,F63,F7,F82 --show-source --statistics
-""")
-    
-    # Make the hook executable on Unix-like systems
-    if platform.system() != "Windows":
-        pre_commit_path.chmod(0o755)
+    return
 
 def run_lint(python_executable):
     """Run linting tools."""

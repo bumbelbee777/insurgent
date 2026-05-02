@@ -8,8 +8,8 @@ import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
-from insurgent.Logging.logger import error, log
-from insurgent.Logging.terminal import *
+from insurgent.logging.logger import error, log
+from insurgent.logging.terminal import *
 
 # Define default paths
 DEFAULT_TOOLCHAIN_DIR = os.path.join(os.path.expanduser("~"), ".insurgent", "toolchain")

@@ -1,9 +1,12 @@
+"""
+Configuration handler for the InsurgeNT Shell.
+"""
+
 import os
-
 import yaml
+from typing import Dict, Optional
 
-from insurgent.Logging.logger import error, info, warning
-from insurgent.TUI.Text import Text
+from insurgent.logging.logger import error, info, log, success, warning
 
 
 class Config:

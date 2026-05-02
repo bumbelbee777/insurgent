@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from insurgent.Build.build import build
-from insurgent.Meta.config import load_config
+from insurgent.build.build import build
+from insurgent.meta.config import load_config
 
 
 def test_example():
@@ -25,7 +25,7 @@ def test_example():
     config_path = example_dir / "project.yaml"
 
     # Simplest approach: mock the build function completely
-    with patch("insurgent.Build.build.build", return_value=True):
+    with patch("insurgent.build.build.build", return_value=True):
         config = load_config(str(config_path))
         # Don't call the actual build function at all, just simulate its result
         assert True

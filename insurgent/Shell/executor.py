@@ -1,14 +1,22 @@
+import asyncio
 import os
 import shlex
-import shutil
 import subprocess
-import sys
-import threading
-from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+from concurrent.futures import ThreadPoolExecutor
 
-from ..TUI.Text import Text
 from .config import Config
 from .History import History
+from insurgent.logging.logger import error, info, log, success, warning
+from insurgent.logging.terminal import *
+from insurgent.rich_utils import (
+    create_panel,
+    create_table,
+    style_text,
+    print_panel,
+    print_table,
+    print_styled
+)
 
 
 class Executor:
@@ -27,23 +35,66 @@ class Executor:
         """
         self.config = config or Config()
         self.history = history or History()
+        self.executor = ThreadPoolExecutor(max_workers=os.cpu_count() or 4)
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+        # Import built-in commands
+        from insurgent.shell.builtins import (
+            about,
+            build,
+            cat,
+            cd,
+            clear,
+            cp,
+            cwd,
+            exit_cmd,
+            help_cmd,
+            history,
+            ls,
+            mkdir,
+            rm,
+            touch,
+        )
+
         self.builtin_commands = {
-            "cd": self._change_directory,
-            "exit": self._exit,
-            "quit": self._exit,
-            "history": self._show_history,
-            "clear": self._clear_screen,
-            "alias": self._manage_aliases,
-            "help": self._show_help,
-            "pwd": self._print_working_directory,
-            "echo": self._echo,
+            "about": {"func": about, "help": "Show version information"},
+            "help": {"func": help_cmd, "help": "Show help"},
+            "exit": {"func": exit_cmd, "help": "Exit the shell"},
+            "quit": {"func": exit_cmd, "help": "Exit the shell"},
+            "clear": {"func": clear, "help": "Clear the screen"},
+            "ls": {"func": ls, "help": "List directory contents"},
+            "cd": {"func": cd, "help": "Change directory"},
+            "mkdir": {"func": mkdir, "help": "Create directory"},
+            "rm": {"func": rm, "help": "Remove file/directory"},
+            "touch": {"func": touch, "help": "Create file"},
+            "cp": {"func": cp, "help": "Copy files"},
+            "cat": {"func": cat, "help": "Show file contents"},
+            "pwd": {"func": cwd, "help": "Show current directory"},
+            "history": {"func": history, "help": "Show command history"},
+            "build": {"func": build, "help": "Build project"},
+            # Original built-ins
+            "alias": {"func": self._manage_aliases, "help": "Manage aliases"},
+            "echo": {"func": self._echo, "help": "Print arguments"},
         }
+
+        # Initialize completer
+        from insurgent.shell.Completer import Completer
+
+        self.completer = Completer(
+            commands={cmd: info["help"] for cmd, info in self.builtin_commands.items()}
+        )
+
         self.running = True
         self.last_exit_code = 0
 
-    def execute(self, command):
+    def execute(self, command: str) -> str:
         """
-        Execute a command.
+        Execute a command, supporting:
+        - && (execute next only if previous succeeded)
+        - || (execute next only if previous failed)
+        - ; (execute next regardless of previous result)
+        - | (pipe output between commands)
 
         Args:
             command: Command string to execute
@@ -51,39 +102,142 @@ class Executor:
         Returns:
             Command output as string
         """
+        if command in (
+            "no more hiding!",
+            "no more hiding",
+            "NO MORE HIDING",
+            "NO MORE HIDING!",
+            "No more hiding",
+            "No more hiding!",
+        ):
+            return "ALL INVADERS WILL BE EXECUTED"
+
         if not command or command.strip() == "":
             return ""
 
         # Add to history
         self.history.add(command)
 
-        # Parse the command
-        args = self._parse_command(command)
-        if not args:
+        # Handle command operators
+        if "&&" in command:
+            return self._execute_chain(command.split("&&"), mode="success")
+        elif "||" in command:
+            return self._execute_chain(command.split("||"), mode="failure")
+        elif ";" in command:
+            return self._execute_chain(command.split(";"), mode="always")
+        elif "|" in command:
+            return self._execute_pipe(command.split("|"))
+
+        # Single command execution
+        return self._execute_command(command)
+
+    def _execute_command(self, cmd: str) -> str:
+        """
+        Execute a single command, handling both sync and async functions.
+
+        Args:
+            cmd: Command string to execute
+
+        Returns:
+            Command output as string
+        """
+        # Split command into parts
+        parts = cmd.split()
+        if not parts:
             return ""
 
-        # Check for command aliases
-        command_name = args[0]
-        if self.config and hasattr(self.config, "expand_alias"):
-            expanded = self.config.expand_alias(command_name)
-            if expanded != command_name:
-                # Replace the command with its alias
-                expanded_args = self._parse_command(expanded)
-                args = expanded_args + args[1:]
-                command_name = args[0]
+        command_name = parts[0]
+        args = parts[1:]
 
-        # Execute builtin command
-        if command_name in self.builtin_commands:
+        # Get command function
+        if command_name not in self.builtin_commands:
+            return self._execute_external(parts)
+
+        command_func = self.builtin_commands[command_name]["func"]
+
+        # Handle async commands
+        if asyncio.iscoroutinefunction(command_func):
             try:
-                output = self.builtin_commands[command_name](args[1:])
+                result = self.loop.run_until_complete(command_func(*args))
+                self.last_exit_code = 0 if result else 1
+                return str(result) if result is not None else ""
+            except Exception as e:
+                self.last_exit_code = 1
+                return str(e)
+        else:
+            # Handle sync commands
+            try:
+                result = command_func(*args)
                 self.last_exit_code = 0
-                return output or ""
+                return str(result) if result is not None else ""
             except Exception as e:
                 self.last_exit_code = 1
                 return str(e)
 
-        # Execute external command
-        return self._execute_external(args)
+    def _execute_chain(self, commands: List[str], mode: str) -> str:
+        """
+        Execute commands in sequence with chaining logic.
+
+        Args:
+            commands: List of commands to execute
+            mode: Chain mode ('success', 'failure', or 'always')
+
+        Returns:
+            Output of last executed command
+        """
+        output = ""
+        for cmd in commands:
+            cmd = cmd.strip()
+            if not cmd:
+                continue
+
+            # Check if we should execute based on previous result and mode
+            should_execute = (
+                (mode == "always")
+                or (mode == "success" and self.last_exit_code == 0)
+                or (mode == "failure" and self.last_exit_code != 0)
+            )
+
+            if should_execute:
+                output = self._execute_command(cmd)
+            else:
+                break
+
+        return output
+
+    def _execute_pipe(self, commands: List[str]) -> str:
+        """
+        Execute commands with piping (|) between them.
+
+        Args:
+            commands: List of commands to pipe together
+
+        Returns:
+            Output of last command in pipe
+        """
+        if len(commands) < 2:
+            return self.execute(commands[0])
+
+        # Execute first command
+        output = self.execute(commands[0])
+
+        # Pipe output to subsequent commands
+        for cmd in commands[1:]:
+            cmd = cmd.strip()
+            if not cmd:
+                continue
+
+            # Create temp file with previous command's output
+            import tempfile
+
+            with tempfile.NamedTemporaryFile(mode="w+") as f:
+                f.write(output)
+                f.flush()
+
+                # Execute command with input from temp file
+                output = self.execute(f"{cmd} < {f.name}")
+
+        return output
 
     def _parse_command(self, command):
         """
@@ -101,7 +255,7 @@ class Executor:
             print(f"Error parsing command: {e}")
             return []
 
-    def _execute_external(self, args):
+    def _execute_external(self, args: List[str]) -> str:
         """
         Execute an external command.
 
@@ -112,35 +266,17 @@ class Executor:
             Command output as string
         """
         try:
-            # Create subprocess
-            process = subprocess.Popen(
+            result = subprocess.run(
                 args,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 text=True,
-                universal_newlines=True,
+                check=False
             )
-
-            # Capture output
-            stdout, stderr = process.communicate()
-
-            # Set exit code
-            self.last_exit_code = process.returncode
-
-            # Return output
-            if stderr and process.returncode != 0:
-                return stderr
-            return stdout
-
-        except FileNotFoundError:
-            self.last_exit_code = 127  # Command not found
-            return f"Command not found: {args[0]}"
-        except PermissionError:
-            self.last_exit_code = 126  # Permission denied
-            return f"Permission denied: {args[0]}"
+            self.last_exit_code = result.returncode
+            return result.stdout if result.stdout else result.stderr
         except Exception as e:
             self.last_exit_code = 1
-            return f"Error executing command: {e}"
+            return str(e)
 
     def _change_directory(self, args):
         """
@@ -265,10 +401,15 @@ class Executor:
         """Echo arguments to output."""
         return " ".join(args)
 
-    def is_running(self):
+    def is_running(self) -> bool:
         """Check if the executor is still running."""
         return self.running
 
-    def get_last_exit_code(self):
-        """Get the exit code of the last executed command."""
+    def get_last_exit_code(self) -> int:
+        """Get the last command's exit code."""
         return self.last_exit_code
+
+    def cleanup(self):
+        """Clean up resources."""
+        self.executor.shutdown(wait=True)
+        self.loop.close()

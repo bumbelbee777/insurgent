@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 # Add insurgent module to path if needed
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from insurgent.Shell.completions import (
+from insurgent.shell.completions import (
     get_completions,
     get_path_completions,
     handle_tab,

@@ -8,7 +8,7 @@ import re
 import sys
 from typing import Any, Callable, Dict, List, Optional
 
-from insurgent.Logging.terminal import *
+from insurgent.logging.terminal import *
 
 # Registry of command completions
 _COMMAND_COMPLETIONS = {}

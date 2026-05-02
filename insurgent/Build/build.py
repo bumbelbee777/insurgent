@@ -4,9 +4,9 @@ import os
 import subprocess
 import time
 
-from insurgent.Build.BuildEngine import BuildEngine
-from insurgent.Logging.logger import *
-from insurgent.Meta.config import load_config
+from insurgent.build.BuildEngine import BuildEngine
+from insurgent.logging.logger import *
+from insurgent.meta.config import load_config
 
 
 async def _build_async(

@@ -1,4 +1,5 @@
 @echo off
+title InsurgeNT Environment Setup
 REM Setup script for InsurgeNT development environment on Windows
 
 REM Check if Python is installed

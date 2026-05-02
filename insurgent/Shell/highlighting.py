@@ -6,18 +6,7 @@ Provides utilities for highlighting shell commands and code.
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-from ..Logging.terminal import (
-    BOLD,
-    FG_BLUE,
-    FG_CYAN,
-    FG_GREEN,
-    FG_MAGENTA,
-    FG_RED,
-    FG_WHITE,
-    FG_YELLOW,
-    RESET,
-)
-from ..TUI.Text import Text
+from insurgent.rich_utils import style_text
 
 # Regex patterns for different token types
 PATTERNS = {
@@ -58,21 +47,21 @@ def highlight_token(token_type: str, token: str) -> str:
         Highlighted token
     """
     if token_type == "command":
-        return f"{FG_GREEN}{token}{RESET}"
+        return str(style_text(token, color="green"))
     elif token_type == "option":
-        return f"{FG_YELLOW}{token}{RESET}"
+        return str(style_text(token, color="yellow"))
     elif token_type == "path":
-        return f"{FG_BLUE}{token}{RESET}"
+        return str(style_text(token, color="blue"))
     elif token_type == "string":
-        return f"{FG_MAGENTA}{token}{RESET}"
+        return str(style_text(token, color="magenta"))
     elif token_type == "number":
-        return f"{FG_CYAN}{token}{RESET}"
+        return str(style_text(token, color="cyan"))
     elif token_type == "pipe":
-        return f"{BOLD}{FG_WHITE}{token}{RESET}"
+        return str(style_text(token, color="white", bold=True))
     elif token_type == "redirect":
-        return f"{FG_RED}{token}{RESET}"
+        return str(style_text(token, color="red"))
     elif token_type == "operator":
-        return f"{BOLD}{FG_RED}{token}{RESET}"
+        return str(style_text(token, color="red", bold=True))
     else:
         return token
 

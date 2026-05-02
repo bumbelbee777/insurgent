@@ -1,8 +1,22 @@
+"""
+Configuration management for InsurgeNT.
+"""
+
+import json
 import os
-
 import yaml
+from typing import Any, Dict, List, Optional
 
-from insurgent.Logging.logger import error, log
+from insurgent.logging.logger import error, info, log, success, warning
+from insurgent.logging.terminal import *
+from insurgent.rich_utils import (
+    create_panel,
+    create_table,
+    style_text,
+    print_panel,
+    print_table,
+    print_styled
+)
 
 MANDATORY_FIELDS = [
     "project",
@@ -18,15 +32,19 @@ MANDATORY_FIELDS = [
 
 
 def load_config(config_path: str) -> dict:
-    """
-    Load and validate project configuration from YAML file
+    """Load a project.yaml configuration file from a given path."""
+    MANDATORY_FIELDS = [
+        "project",
+        "authors",
+        "license",
+        "language",
+        "standard",
+        "compiler",
+        "project_dirs",
+        "project_type",
+        "output",
+    ]
 
-    Args:
-        config_path: Path to the project.yaml file
-
-    Returns:
-        Dictionary with project configuration or empty dict if error
-    """
     if not os.path.exists(config_path):
         error(f"Config file {config_path} not found.")
         return {}
@@ -41,50 +59,69 @@ def load_config(config_path: str) -> dict:
         error(f"Error reading config file: {e}")
         return {}
 
-    # Check for mandatory fields with a more flexible approach
+    config["_config_path"] = config_path
+
     missing_fields = [field for field in MANDATORY_FIELDS if field not in config]
     if missing_fields:
-        error(
-            f"Missing mandatory field(s) in {config_path}: {', '.join(missing_fields)}"
-        )
-        # Don't return empty - return what we have, but with a warning
-        log(f"WARNING: Some mandatory fields are missing. Build may fail.")
+        error(f"Missing mandatory field(s): {', '.join(missing_fields)}")
+        log("WARNING: Some mandatory fields are missing. Build may fail.")
 
-    # Set default values for optional fields
     config.setdefault("description", f"{config.get('project', 'Unknown')} project")
     config.setdefault("version", "0.0.1")
-    config.setdefault("build_rule", "all")
-    config.setdefault("clean_rule", "clean")
 
-    # Handle compiler flags structure
-    if "compiler_flags" in config and isinstance(config["compiler_flags"], str):
-        # Convert string to structured format
-        flags_str = config["compiler_flags"]
-        config["compiler_flags"] = {"common": flags_str}
-    elif "compiler_flags" not in config:
+    # Normalize authors field
+    authors = config.get("authors")
+    if isinstance(authors, str):
+        config["authors"] = [authors]
+    elif isinstance(authors, list):
+        config["authors"] = [str(author) for author in authors]
+    else:
+        config["authors"] = []
+
+    # Normalize compiler_flags
+    if "compiler_flags" not in config:
         config["compiler_flags"] = {}
+    elif isinstance(config["compiler_flags"], str):
+        config["compiler_flags"] = {"common": config["compiler_flags"]}
+    elif isinstance(config["compiler_flags"], list):
+        try:
+            flags_dict = {}
+            for item in config["compiler_flags"]:
+                if isinstance(item, dict):
+                    flags_dict.update(item)
+                else:
+                    warning("Invalid entry in compiler_flags list; expected dict.")
+            config["compiler_flags"] = flags_dict
+        except Exception as e:
+            warning(f"Failed to parse compiler_flags: {e}")
+            config["compiler_flags"] = {}
 
-    # Set compiler flags defaults
     compiler_flags = config["compiler_flags"]
-    compiler_flags.setdefault("global", "")
-    compiler_flags.setdefault("common", "")
-    compiler_flags.setdefault("c", "")
-    compiler_flags.setdefault("cpp", "")
-    compiler_flags.setdefault("ar", "")
-    compiler_flags.setdefault("ld", "")
-    compiler_flags.setdefault("as", "")
+    for key in ["global", "common", "c", "cpp", "ar", "ld", "as"]:
+        compiler_flags.setdefault(key, "")
 
-    # Handle other optional fields
     config.setdefault("subprojects", [])
     config.setdefault("ignore", [])
 
-    # Handle bootstrap if defined
-    if "bootstrap" in config and isinstance(config["bootstrap"], dict):
-        bootstrap = config["bootstrap"]
-        bootstrap.setdefault("task", "bootstrap")
-        bootstrap.setdefault("command", "")
+    # Bootstrap: expect list of dicts
+    if "bootstrap" in config:
+        if isinstance(config["bootstrap"], list):
+            valid_bootstrap = []
+            for step in config["bootstrap"]:
+                if isinstance(step, dict) and any(
+                    k in step for k in ("task", "command")
+                ):
+                    valid_bootstrap.append(step)
+                else:
+                    warning(
+                        "Invalid bootstrap entry; expected dict with 'task' or 'command'."
+                    )
+            config["bootstrap"] = valid_bootstrap if valid_bootstrap else None
+        else:
+            warning("Expected bootstrap to be a list of dictionaries. Ignoring...")
+            config["bootstrap"] = None
     else:
-        config["bootstrap"] = {"task": "bootstrap", "command": ""}
+        config["bootstrap"] = None
 
     log(
         f"Loaded project configuration: {config.get('project', 'Unknown')} v{config.get('version', '0.0.1')}"
@@ -151,3 +188,43 @@ def validate_config(config: dict) -> bool:
             log(f"WARNING: Project directory '{directory}' does not exist.")
 
     return True
+
+def to_compile_commands(config: dict) -> list:
+    """
+    Converts the loaded config into a compile_commands.json-style list of commands.
+
+    Returns:
+        List of compile command entries
+    """
+    compile_commands = []
+    base_dir = os.path.dirname(os.path.abspath(config.get("_config_path", ".")))
+    language = config.get("language", "c++").lower()
+    std_flag = config["compiler_flags"].get("cpp" if "++" in language else "c", "")
+    common_flags = config["compiler_flags"].get("common", "")
+    global_flags = config["compiler_flags"].get("global", "")
+    compiler = config.get("compiler", "g++")
+    standard_flag = std_flag or ""
+
+    for dir_name in config.get("project_dirs", []):
+        abs_dir = os.path.join(base_dir, dir_name)
+        if not os.path.isdir(abs_dir):
+            continue
+        for root, _, files in os.walk(abs_dir):
+            for fname in files:
+                if fname.endswith((".cpp", ".c", ".cc", ".cxx")):
+                    source_path = os.path.join(root, fname)
+                    entry = {
+                        "directory": base_dir,
+                        "file": source_path,
+                        "command": f"{compiler} {global_flags} {common_flags} {standard_flag} -c {source_path}",
+                    }
+                    compile_commands.append(entry)
+
+    return compile_commands
+
+
+def export_compile_commands(config: dict, output_path: str = "compile_commands.json"):
+    commands = to_compile_commands(config)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(commands, f, indent=2)
+    log(f"Exported compile_commands.json with {len(commands)} entries.")

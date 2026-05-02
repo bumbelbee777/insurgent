@@ -2,11 +2,11 @@ import asyncio
 import os
 from pathlib import Path
 
-from insurgent.Build.build import clean
-from insurgent.Build.BuildEngine import BuildEngine
-from insurgent.Logging.logger import error, log
-from insurgent.Logging.terminal import *
-from insurgent.Meta.config import load_config
+from insurgent.build.build import clean
+from insurgent.build.BuildEngine import BuildEngine
+from insurgent.logging.logger import error, log
+from insurgent.logging.terminal import *
+from insurgent.meta.config import load_config
 
 
 def scorch_src_tree(options=None):
