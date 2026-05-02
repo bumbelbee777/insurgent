@@ -2,9 +2,10 @@ name: InsurgeNT CI/CD
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
+    tags: ["v*"]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
   test:
@@ -12,90 +13,92 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ["3.8", "3.9", "3.10"]
 
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest pytest-cov
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        pip install -e .
-      shell: bash
-    
-    - name: Run tests with pytest
-      run: |
-        pytest tests/ --cov=insurgent --cov-report=xml
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        fail_ci_if_error: false
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install -e .
+        shell: bash
+
+      - name: Run tests with pytest
+        run: |
+          pytest tests/ --cov=insurgent --cov-report=xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
 
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 "black>=24.8.0,<26" isort
-    
-    - name: Lint with flake8
-      run: |
-        flake8 insurgent/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
-    
-    - name: Check formatting with black
-      working-directory: ${{ github.workspace }}
-      run: |
-        python -m black --check --config=pyproject.toml --target-version=py310 insurgent tests
-    
-    - name: Check imports with isort
-      working-directory: ${{ github.workspace }}
-      run: |
-        python -m isort --check --settings-path=pyproject.toml insurgent tests
+      - uses: actions/checkout@v4
 
-  build-and-publish:
-    name: Build and publish Python distribution
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 "black>=24.8.0,<26" isort
+
+      - name: Lint with flake8
+        run: |
+          flake8 insurgent/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Check formatting with black
+        working-directory: ${{ github.workspace }}
+        run: |
+          python -m black --check --config=pyproject.toml --target-version=py310 insurgent tests
+
+      - name: Check imports with isort
+        working-directory: ${{ github.workspace }}
+        run: |
+          python -m isort --check --settings-path=pyproject.toml insurgent tests
+
+  # Trusted Publishing (OIDC): configure this workflow + repo + env "pypi" on https://pypi.org
+  # (no PYPI_API_TOKEN). Ensure the PyPI "project name" in the publisher matches pyproject.toml
+  # `[project]` name after PyPI normalization (see https://pypi.org/project/insurgent/).
+  pypi-publish:
+    name: Build and publish to PyPI
     needs: [test, lint]
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    
+    environment:
+      name: pypi
+      url: https://pypi.org/p/insurgent/
+    permissions:
+      id-token: write
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    
-    - name: Install build dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build wheel setuptools twine
-    
-    - name: Build package
-      run: |
-        python -m build
-    
-    - name: Publish package
-      if: startsWith(github.ref, 'refs/tags')
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        skip_existing: true 
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
