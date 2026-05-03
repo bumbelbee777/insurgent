@@ -34,6 +34,9 @@ MANDATORY_FIELDS = [
 
 def load_config(config_path: str) -> dict:
     """Load a project.yaml configuration file from a given path."""
+    if os.path.isdir(config_path):
+        config_path = os.path.join(config_path, "project.yaml")
+
     MANDATORY_FIELDS = [
         "project",
         "authors",
@@ -103,6 +106,8 @@ def load_config(config_path: str) -> dict:
 
     config.setdefault("subprojects", [])
     config.setdefault("ignore", [])
+    config.setdefault("supplementary_sources", [])
+    config.setdefault("extra_sources", [])
 
     # Bootstrap: expect list of dicts
     if "bootstrap" in config:

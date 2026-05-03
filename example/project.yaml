@@ -5,7 +5,7 @@ license: MIT
 version: 0.1.0
 language: c++
 standard: c++20
-compiler: clang++
+compiler: g++
 compiler_flags:
   - global: "-fPIC"
   - common: "-O2 -Wall -Wextra"
@@ -15,7 +15,12 @@ project_dirs: ["sources"]
 project_type: executable
 output: binaries/insurgent-example
 
-# Optional bootstrap configuration
+# Ensure output directory exists on all platforms (Windows cmd has no `mkdir -p`).
 bootstrap:
   - task: prepare
-  - command: "mkdir -p binaries"
+  - command: python -c "import pathlib; pathlib.Path('binaries').mkdir(parents=True, exist_ok=True)"
+
+# Native harness: `insurgent test` / `test` in the InsurgeNT shell.
+unit_tests:
+  project_dirs: ["tests"]
+  output: binaries/run_tests

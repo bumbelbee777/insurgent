@@ -57,11 +57,16 @@ class Executor:
             rm,
             test,
             touch,
+            version_cmd,
         )
 
         self.builtin_commands = {
             "about": {"func": about, "help": "Show version information"},
             "help": {"func": help_cmd, "help": "Show help"},
+            "h": {"func": help_cmd, "help": "Show help (alias)"},
+            "?": {"func": help_cmd, "help": "Show help (alias)"},
+            "version": {"func": version_cmd, "help": "Print version"},
+            "v": {"func": version_cmd, "help": "Print version (alias)"},
             "exit": {"func": exit_cmd, "help": "Exit the shell"},
             "quit": {"func": exit_cmd, "help": "Exit the shell"},
             "clear": {"func": clear, "help": "Clear the screen"},

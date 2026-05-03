@@ -14,11 +14,11 @@ root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if root not in sys.path:
     sys.path.insert(0, root)
 
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 
 def about():
-    print(f"		{CYAN}{BOLD}✦ InsurgeNT ✦{RESET}")
+    print(f"		{CYAN}{BOLD} InsurgeNT {RESET}")
     print(f"	{GREEN}Integrated Native Toolkit version {VERSION}{RESET}")
     print(
         f"	{YELLOW}InsurgeNT is a build environment for C/C++ projects, aimed for user-friendliness and compactness.{RESET}"
@@ -28,47 +28,41 @@ def about():
 
 def help():
     about()
-    print(f"{BOLD}Usage:{RESET} insurgent.py [command] [options]")
+    print(f"{BOLD}Usage:{RESET} insurgent [-h | --help] [-v | -V | --version]")
     print(
-        f"{BOLD}Note:{RESET} Running InsurgeNT without commands will launch the interactive shell."
+        "       insurgent "
+        "{help|h|version|v|init|build|test|clean|rebuild|scorch|shell|sh} ..."
     )
+    print(f"       insurgent shell <command>...")
+    print(f"       insurgent sh <command>...")
+    print()
+    print(
+        f"{BOLD}Note:{RESET} Running InsurgeNT with no subcommand starts the interactive shell."
+    )
+    print()
+    print(f"{MAGENTA}Global options:{RESET}")
+    print(f"  {GREEN}-h, --help{RESET}      Show this message and exit.")
+    print(f"  {GREEN}-v, -V, --version{RESET}  Print version and exit.")
     print()
     print(f"{MAGENTA}Commands:{RESET}")
+    print(f"  {GREEN}help{RESET}, {GREEN}h{RESET}       Same as -h (CLI help text).")
     print(
-        f"  {GREEN}build{RESET} [component] [options] - Build the project/specified subproject."
+        f"  {GREEN}version{RESET}, {GREEN}v{RESET}  Same as --version (print version)."
     )
-    print(f"      {YELLOW}Options:{RESET}")
+    print(f"  {GREEN}init{RESET}, {GREEN}i{RESET}       Create a new project (wizard).")
     print(
-        "        "
-        + f"{BLUE}-C{RESET}          Clean the build directory before building."
+        f"  {GREEN}build{RESET}, {GREEN}b{RESET}     Build the project (needs project.yaml)."
     )
-    print("        " + f"{BLUE}-v{RESET}          Verbose logging during building.")
-    print("        " + f"{BLUE}-s{RESET}          Build silently.")
-    print("        " + f"{BLUE}-j=[jobs]{RESET}   Number of jobs to run in parallel.")
     print(
-        "        "
-        + f"{BLUE}--no-log{RESET}    Do not log the build output to a file (default is logging enabled)."
+        f"  {GREEN}test{RESET}, {GREEN}t{RESET}       Build and run unit tests (see unit_tests in project.yaml)."
     )
-    print()
-    print(f"  {GREEN}clean{RESET} [component] - Clean the specified subproject.")
+    print(f"  {GREEN}clean{RESET}, {GREEN}c{RESET}     Remove build artifacts.")
+    print(f"  {GREEN}rebuild{RESET}, {GREEN}rb{RESET}  Clean then build.")
     print(
-        f"  {GREEN}scorch{RESET} [component] - Scorch the entire project (remove all build artifacts and untracked files, reset the project to the initial state)."
+        f"  {GREEN}scorch{RESET}, {GREEN}s{RESET}    Clean and remove bin/lib/obj under the project."
     )
-    print(f"  {GREEN}depmgr{RESET} [operation] - Run the dependency manager.")
-    print("      Options:")
     print(
-        "        add [name] [config]    Add a dependency (configuration YAML file is optional)."
-    )
-    print("        remove [name]          Remove a depency.")
-    print("	       list                   List all project dependencies.")
-    print(
-        f"  {GREEN}test{RESET} (alias {GREEN}t{RESET}) — Build and run the unit test executable "
-        f"from the {GREEN}unit_tests{RESET} section of project.yaml."
-    )
-    print("      Options:")
-    print(
-        "        "
-        + f"{BLUE}--no-incremental{RESET}   Recompile all test sources."
-        + f"        {BLUE}--silent{RESET}   Quieter build output."
+        f"  {GREEN}shell{RESET}, {GREEN}sh{RESET}  Run one dev-shell line ({GREEN}pwd{RESET}, {GREEN}build{RESET}, …) "
+        "and exit."
     )
     print()

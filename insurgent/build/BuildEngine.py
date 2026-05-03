@@ -165,6 +165,8 @@ class BuildEngine:
         cfg.setdefault("project_dirs", ["src"])
         cfg.setdefault("subprojects", [])
         cfg.setdefault("ignore", [])
+        cfg.setdefault("supplementary_sources", [])
+        cfg.setdefault("extra_sources", [])
         cfg.setdefault("output", "")
 
         authors = cfg.get("authors")
@@ -317,6 +319,33 @@ class BuildEngine:
             return "asm"
         return None
 
+    def _resolve_supplementary_source_paths(self) -> List[str]:
+        """Paths from ``supplementary_sources`` / ``extra_sources`` in ``project.yaml``."""
+        raw = (
+            self.config.get("supplementary_sources")
+            or self.config.get("extra_sources")
+            or []
+        )
+        if isinstance(raw, str):
+            raw = [raw]
+        elif not isinstance(raw, list):
+            return []
+        out: List[str] = []
+        for item in raw:
+            if not item or not isinstance(item, str):
+                continue
+            joined = os.path.normpath(os.path.join(self.project_path, item.strip()))
+            if "*" in item or "?" in item:
+                for fp in glob.glob(joined, recursive=False):
+                    ft = self._file_type(fp)
+                    if ft and os.path.isfile(fp):
+                        out.append(os.path.abspath(fp))
+            elif os.path.isfile(joined):
+                ft = self._file_type(joined)
+                if ft:
+                    out.append(os.path.abspath(joined))
+        return out
+
     def _find_source_files(self) -> List[str]:
         """Collect every C/C++/ASM source file under the project's source dirs."""
         ignore_patterns = self.config.get("ignore", []) or []
@@ -334,6 +363,16 @@ class BuildEngine:
                         if any(ignored in rel for ignored in ignore_patterns):
                             continue
                         sources.append(file_path)
+
+        skip = {(os.path.normpath(p)).lower() for p in sources}
+        for fp in self._resolve_supplementary_source_paths():
+            key = os.path.normpath(fp).lower()
+            if key not in skip:
+                rel = os.path.relpath(fp, self.project_path)
+                if any(ignored in rel for ignored in ignore_patterns):
+                    continue
+                sources.append(fp)
+                skip.add(key)
 
         return sorted(set(sources))
 
@@ -873,7 +912,7 @@ class BuildEngine:
         incremental: bool = True,
         multi_threaded: bool = True,
         silent: bool = False,
-        build_subprojects: bool = False,
+        build_subprojects: bool = True,
     ) -> Tuple[bool, str]:
         """Public entry point. Returns ``(success, reason)``."""
         try:

@@ -229,7 +229,7 @@ async def test_build_with_options(build_engine):
             incremental=True,
             multi_threaded=True,
             silent=False,
-            build_subprojects=False,
+            build_subprojects=True,
         )
 
         # Test full build
@@ -240,5 +240,5 @@ async def test_build_with_options(build_engine):
             incremental=False,
             multi_threaded=True,
             silent=False,
-            build_subprojects=False,
+            build_subprojects=True,
         )

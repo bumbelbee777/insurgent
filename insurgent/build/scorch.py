@@ -23,7 +23,7 @@ def scorch_src_tree(options=None):
     verbose = "--verbose" in options
 
     if verbose:
-        log(f"{YELLOW}✦ Scorching source tree{RESET}")
+        log(f"{YELLOW}Scorching source tree{RESET}")
 
     # Get the current directory to clean
     project_dir = os.getcwd()
@@ -39,7 +39,7 @@ def scorch_src_tree(options=None):
 
     if clean_result:
         if verbose:
-            log(f"{GREEN}✔ Successfully scorched source tree{RESET}")
+            log(f"{GREEN}Successfully scorched source tree{RESET}")
         return True
     else:
         error("Failed to clean project")
@@ -64,7 +64,7 @@ async def scorch_all(projects_dir=None, options=None):
         projects_dir = os.getcwd()
 
     if verbose:
-        log(f"{YELLOW}✦ Scorching all projects in {projects_dir}{RESET}")
+        log(f"{YELLOW}Scorching all projects in {projects_dir}{RESET}")
 
     # Find all subdirectories with project.yaml files
     projects = []
@@ -105,7 +105,7 @@ async def scorch_all(projects_dir=None, options=None):
             os.chdir(old_cwd)
 
     if success and verbose:
-        log(f"{GREEN}✔ Successfully scorched all projects{RESET}")
+        log(f"{GREEN}Successfully scorched all projects{RESET}")
 
     return success
 

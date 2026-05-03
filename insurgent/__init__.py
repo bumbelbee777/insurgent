@@ -66,16 +66,21 @@ LANGUAGE_STANDARDS = {
     "asm": ["nasm", "gas", "masm"],
 }
 
-# Command symbols
+# Command symbols (ASCII-only for Windows consoles without UTF-8)
 COMMAND_SYMBOLS = {
-    "build": "⚡",
-    "test": "🧪",
-    "clean": "🧹",
-    "rebuild": "🔄",
-    "scorch": "🔥",
-    "init": "✨",
-    "help": "❓",
-    "exit": "👋",
+    "build": "*",
+    "test": "T",
+    "clean": "-",
+    "rebuild": "R",
+    "scorch": "X",
+    "init": "+",
+    "about": "@",
+    "help": "?",
+    "h": "?",
+    "?": "?",
+    "version": "V",
+    "v": "v",
+    "exit": "=",
 }
 
 
@@ -87,12 +92,37 @@ def get_command_symbol(cmd: str) -> str:
 def parse_args(argv=None):
     """Top-level parser that knows about --version, --help, subcommands, or fallthrough to shell."""
     parser = argparse.ArgumentParser(prog="insurgent", add_help=False)
-    parser.add_argument("-v", "--version", action="store_true")
-    parser.add_argument("-h", "--help", action="store_true")
+    parser.add_argument(
+        "-v",
+        "-V",
+        "--version",
+        action="store_true",
+        dest="version",
+        help="Print version and exit",
+    )
+    parser.add_argument(
+        "-h",
+        "--help",
+        action="store_true",
+        dest="help",
+        help="Show help and exit",
+    )
     subparsers = parser.add_subparsers(dest="command", metavar="CMD")
 
     # init
     subparsers.add_parser("init", aliases=["i"], help="Create a new project")
+
+    # help / version (mirror common CLI tools)
+    subparsers.add_parser(
+        "help",
+        aliases=["h"],
+        help="Show this help text",
+    )
+    subparsers.add_parser(
+        "version",
+        aliases=["v"],
+        help="Print version number",
+    )
 
     # build
     build = subparsers.add_parser(
@@ -116,7 +146,7 @@ def parse_args(argv=None):
         incremental=True,
         multi_threaded=True,
         silent=False,
-        build_subprojects=False,
+        build_subprojects=True,
     )
 
     # test (unit tests)
@@ -145,9 +175,18 @@ def parse_args(argv=None):
         "scorch", aliases=["s"], help="Remove all build artifacts and generated files"
     )
 
-    # fallback: any other arguments get passed to shell
-    parser.add_argument(
-        "shell_cmd", nargs=argparse.REMAINDER, help="Run a one-off shell command"
+    # one-off dev shell (builtins like pwd, build, …) without starting the interactive REPL
+    sh_parser = subparsers.add_parser(
+        "shell",
+        aliases=["sh"],
+        help="Run one interactive-shell command line and exit",
+        add_help=False,
+    )
+    sh_parser.add_argument("-h", "--help", action="store_true", dest="shell_help")
+    sh_parser.add_argument(
+        "invoke_argv",
+        nargs=argparse.REMAINDER,
+        help="Command and arguments passed to ShellInterface.execute",
     )
 
     return parser.parse_args(argv)
@@ -183,7 +222,7 @@ async def run_init():
     # Welcome message
     console.print(
         Panel.fit(
-            "[bold green]✨ Welcome to InsurgeNT Project Wizard[/]\n"
+            "[bold green]Welcome to InsurgeNT Project Wizard[/]\n"
             "This will help you create a new project.",
             title="Project Initialization",
             border_style="green",
@@ -296,7 +335,7 @@ int main(int argc, char** argv) {
                     )
             progress.update(task, advance=40)
 
-        console.print(f"\n[success]✓ Project '{project_name}' created successfully![/]")
+        console.print(f"\n[success]Project '{project_name}' created successfully.[/]")
         console.print("\n[prompt]Next steps:[/]")
         console.print(f"  1. [path]cd {project_name}[/]")
         console.print("  2. [code]insurgent build[/]")
@@ -380,26 +419,50 @@ async def run_scorch():
 
 
 def run_shell(cmd_args):
+    """
+    Execute a single dev-shell command line via ShellInterface.
+
+    Mirrors what the interactive REPL runs for one input line; exits with the
+    executor's last subprocess / builtin exit code when set.
+    """
     shell = ShellInterface()
-    out = shell.run_command(" ".join(cmd_args))
+    line = " ".join(cmd_args).strip()
+    out = shell.run_command(line)
     if out:
         print(out)
-    return 0
+    code = shell.executor.get_last_exit_code()
+    return 0 if code is None else int(code)
 
 
 def main():
     args = parse_args(sys.argv[1:])
+    stdout = getattr(sys.stdout, "reconfigure", None)
+    if callable(stdout):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
 
     # top-level flags
     if args.version:
         console = Console(theme=INSURGENT_THEME)
-        console.print(f"[version]InsurgeNT version {VERSION}[/]")
+        console.print(f"[version]InsurgeNT {VERSION}[/]")
         sys.exit(0)
     if args.help and not args.command:
         print_help()
         sys.exit(0)
 
     # dispatch
+    if args.command in ("help", "h"):
+        print_help()
+        sys.exit(0)
+
+    if args.command in ("version", "v"):
+        console = Console(theme=INSURGENT_THEME)
+        console.print(f"[version]InsurgeNT {VERSION}[/]")
+        sys.exit(0)
+
     if args.command in ("init", "i"):
         sys.exit(asyncio.run(run_init()))
 
@@ -413,7 +476,7 @@ def main():
         if getattr(args, "help", False):
             console = Console(theme=INSURGENT_THEME)
             console.print(
-                "[prompt]insurgent test[/] — build and run the unit test executable "
+                "[prompt]insurgent test[/] - build and run the unit test executable "
                 "configured under [code]unit_tests[/] in project.yaml."
             )
             console.print("  [code]--no-incremental[/]  Force recompile test sources")
@@ -430,9 +493,25 @@ def main():
     if args.command in ("scorch", "s"):
         sys.exit(asyncio.run(run_scorch()))
 
-    # if there is a leftover shell_cmd, run it
-    if args.shell_cmd:
-        sys.exit(run_shell(args.shell_cmd))
+    if args.command in ("shell", "sh"):
+        if getattr(args, "shell_help", False):
+            console = Console(theme=INSURGENT_THEME)
+            console.print(
+                "[prompt]insurgent shell[/] / [prompt]insurgent sh[/] — "
+                "run one dev-shell line (examples: [code]pwd[/], "
+                "[code]ls[/], [code]build --silent[/], [code]test[/]) and exit."
+            )
+            sys.exit(0)
+        invoke = getattr(args, "invoke_argv", None) or []
+        invoke = [t for t in invoke if t != "--"]
+        if not invoke:
+            console = Console(theme=INSURGENT_THEME)
+            console.print(
+                "[error]Missing command.[/] Usage: "
+                "[code]insurgent shell <cmd>[/] (e.g. [code]insurgent sh pwd[/])."
+            )
+            sys.exit(2)
+        sys.exit(run_shell(invoke))
 
     # Otherwise, start interactive shell
     shell = ShellInterface()
@@ -441,8 +520,8 @@ def main():
     console = Console(theme=INSURGENT_THEME)
     console.print(
         Panel.fit(
-            f"[bold green]✨ InsurgeNT Shell v{VERSION}[/]\n"
-            "[dim]Type 'help' for available commands, 'exit' to quit.[/]",
+            f"[bold green]InsurgeNT Shell v{VERSION}[/]\n"
+            "[dim]Type 'help' or 'h' for commands; 'version' / 'v' for version; 'exit' to quit.[/]",
             title="Welcome",
             border_style="green",
         )
@@ -460,7 +539,7 @@ def main():
                 continue
 
             if cmd in ("exit", "quit"):
-                console.print("[success]👋 Goodbye![/]")
+                console.print("[success]Goodbye.[/]")
                 break
 
             # Execute command
@@ -472,7 +551,7 @@ def main():
             print()
             continue
         except EOFError:
-            console.print("[success]👋 Goodbye![/]")
+            console.print("[success]Goodbye.[/]")
             break
         except Exception as e:
             console.print(f"[error]Error: {str(e)}[/]")

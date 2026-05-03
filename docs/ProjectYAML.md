@@ -29,6 +29,8 @@
     - `as`      - Assembler flags.
 * `subprojects`   - The subproject(s) of your main project, specified as subdirectories.
 * `ignore`        - A list of file(s)/folder(s) to ignore when resolving source files.
+* `supplementary_sources` - Optional list of extra source files **relative to this project root** (for example ``../sources/Program.cxx`` in a CLI subproject). Entries may use ``*`` / ``?`` globs. These files are compiled in addition to matches under ``project_dirs`` (which may be empty).
+* `extra_sources` - Alias for ``supplementary_sources``.
 * `include_paths` - Include paths to pass to the compiler, they're resolved automatically by default.
 * `unit_tests`    - Optional native unit test harness (separate executable from the main ``output``).
     - ``project_dirs`` - One directory or a list of directories containing test-only sources (scanned like main sources: ``.c``, ``.cpp``, …).

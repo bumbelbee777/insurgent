@@ -18,31 +18,39 @@ RESET = "\033[0m"
 
 def about(*args):
     """Show version information."""
-    from insurgent.meta.version import VERSION
     from insurgent.meta.version import about as version_about
 
-    return version_about()
+    version_about()
+    return ""
+
+
+def version_cmd(*args):
+    """Print InsurgeNT version (short, one line)."""
+    from insurgent.meta.version import VERSION
+
+    return f"InsurgeNT {VERSION}"
 
 
 def help_cmd(*args):
     """Show help information."""
     help_text = """
 Available commands:
-  about     - Show version information
-  help      - Show this help message
-  exit      - Exit the shell
-  clear     - Clear the screen
-  ls        - List directory contents
-  cd        - Change directory
-  mkdir     - Create directory
-  rm        - Remove file/directory
-  touch     - Create file
-  cp        - Copy files
-  cat       - Show file contents
-  pwd       - Show current directory
-  history   - Show command history
-  build     - Build project
-  test      - Build and run unit tests (see unit_tests in project.yaml)
+  about      - Show version banner (same as CLI about)
+  version,v  - Print version (one line)
+  help,h,?   - Show this help message
+  exit       - Exit the shell (also: quit)
+  clear      - Clear the screen
+  ls         - List directory contents
+  cd         - Change directory
+  mkdir      - Create directory
+  rm         - Remove file/directory
+  touch      - Create file
+  cp         - Copy files
+  cat        - Show file contents
+  pwd        - Show current directory
+  history    - Show command history
+  build      - Build project
+  test       - Build and run unit tests (see unit_tests in project.yaml)
 """
     return help_text
 

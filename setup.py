@@ -10,7 +10,7 @@ with open(os.path.join(this_directory, 'requirements.txt'), encoding='utf-8') as
 
 setup(
     name="insurgent",
-    version="0.1.0",
+    version="0.1.1",
     author="InsurgeNT Team",
     author_email="bumbelbee437167@gmail.com",
     description="A modern dev shell and build system for C/C++ projects with parallel build support",

@@ -17,6 +17,10 @@ _COMMAND_COMPLETIONS = {}
 commands = {
     "about": [],
     "help": [],
+    "h": [],
+    "?": [],
+    "version": [],
+    "v": [],
     "exit": [],
     "clear": [],
     "ls": [],

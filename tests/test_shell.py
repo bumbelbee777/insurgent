@@ -153,15 +153,41 @@ def test_command_symbols():
     """Test command symbol mapping."""
     from insurgent.shell.shell import get_command_symbol
 
-    assert get_command_symbol("build") == "⚡"
-    assert get_command_symbol("test") == "🧪"
-    assert get_command_symbol("clean") == "🧹"
-    assert get_command_symbol("rebuild") == "🔄"
-    assert get_command_symbol("scorch") == "🔥"
-    assert get_command_symbol("init") == "✨"
-    assert get_command_symbol("help") == "❓"
-    assert get_command_symbol("exit") == "👋"
+    assert get_command_symbol("build") == "*"
+    assert get_command_symbol("test") == "T"
+    assert get_command_symbol("clean") == "-"
+    assert get_command_symbol("rebuild") == "R"
+    assert get_command_symbol("scorch") == "X"
+    assert get_command_symbol("init") == "+"
+    assert get_command_symbol("about") == "@"
+    assert get_command_symbol("help") == "?"
+    assert get_command_symbol("h") == "?"
+    assert get_command_symbol("?") == "?"
+    assert get_command_symbol("version") == "V"
+    assert get_command_symbol("v") == "v"
+    assert get_command_symbol("exit") == "="
     assert get_command_symbol("unknown") == ">"
+
+
+def test_cli_help_and_version_subcommands():
+    from insurgent import parse_args
+
+    assert parse_args(["h"]).command == "h"
+    assert parse_args(["v"]).command == "v"
+    assert parse_args(["-V"]).version is True
+    assert parse_args(["--version"]).version is True
+
+
+def test_cli_shell_subparser():
+    from insurgent import parse_args
+
+    for cmd in ("shell", "sh"):
+        ns = parse_args([cmd, "pwd"])
+        assert ns.command == cmd
+        assert ns.invoke_argv == ["pwd"]
+
+    ns_dash = parse_args(["sh", "--", "pwd"])
+    assert ns_dash.invoke_argv == ["--", "pwd"]
 
 
 class TestShellHistory(unittest.TestCase):

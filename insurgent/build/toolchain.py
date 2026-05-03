@@ -378,9 +378,7 @@ class ToolchainManager:
         Returns:
             True if successful, False otherwise
         """
-        log(
-            f"{CYAN}🔨 InsurgeNT Toolchain Setup - {self.toolchain_name.upper()} 🔨{RESET}"
-        )
+        log(f"{CYAN}InsurgeNT Toolchain Setup - {self.toolchain_name.upper()}{RESET}")
 
         # Check if toolchain is already installed
         current_version = self.get_version()
@@ -409,7 +407,7 @@ class ToolchainManager:
             error("Failed to install toolchain")
             return False
 
-        log(f"{GREEN}🚀 {self.toolchain_name.upper()} toolchain setup complete!{RESET}")
+        log(f"{GREEN}{self.toolchain_name.upper()} toolchain setup complete.{RESET}")
         log(f"{GREEN}May your project compile without errors!{RESET}")
         return True
 

@@ -28,16 +28,21 @@ INSURGENT_THEME = Theme(
     }
 )
 
-# Command symbols
+# Command symbols (ASCII for all consoles)
 COMMAND_SYMBOLS = {
-    "build": "⚡",
-    "test": "🧪",
-    "clean": "🧹",
-    "rebuild": "🔄",
-    "scorch": "🔥",
-    "init": "✨",
-    "help": "❓",
-    "exit": "👋",
+    "build": "*",
+    "test": "T",
+    "clean": "-",
+    "rebuild": "R",
+    "scorch": "X",
+    "init": "+",
+    "about": "@",
+    "help": "?",
+    "h": "?",
+    "?": "?",
+    "version": "V",
+    "v": "v",
+    "exit": "=",
 }
 
 
@@ -78,7 +83,7 @@ class Shell:
         """Run the interactive shell."""
         self.console.print(
             Panel.fit(
-                "[bold green]✨ InsurgeNT Shell[/]\n"
+                "[bold green]InsurgeNT Shell[/]\n"
                 "[dim]Type 'help' for available commands, 'exit' to quit.[/]",
                 title="Welcome",
                 border_style="green",
@@ -106,7 +111,7 @@ class Shell:
                 # Check if we should exit
                 if not self.executor.is_running():
                     self.running = False
-                    self.console.print("[success]👋 Goodbye![/]")
+                    self.console.print("[success]Goodbye.[/]")
 
                 # Print output if any
                 if output:
@@ -122,7 +127,7 @@ class Shell:
                 continue
             except EOFError:
                 self.running = False
-                self.console.print("[success]👋 Goodbye![/]")
+                self.console.print("[success]Goodbye.[/]")
             except Exception as e:
                 self.console.print(f"[error]Error: {str(e)}[/]")
 
@@ -178,7 +183,7 @@ class ShellInterface:
         try:
             self.console.print(
                 Panel.fit(
-                    "[bold green]✨ InsurgeNT Shell[/]\n"
+                    "[bold green]InsurgeNT Shell[/]\n"
                     "[dim]Type 'help' for available commands, 'exit' to quit.[/]",
                     title="Welcome",
                     border_style="green",
@@ -213,7 +218,7 @@ class ShellInterface:
                 except Exception as e:
                     self.console.print(f"[error]Error: {str(e)}[/]")
         except EOFError:
-            self.console.print("[success]👋 Goodbye![/]")
+            self.console.print("[success]Goodbye.[/]")
             return 0
         finally:
             self.executor.cleanup()
