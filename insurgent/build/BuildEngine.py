@@ -755,6 +755,16 @@ class BuildEngine:
 
         os.makedirs(os.path.dirname(output_file) or ".", exist_ok=True)
 
+        # Incremental `ar r` replaces listed members but can leave *orphan* members
+        # (same basename from moved paths, removed TUs, or toolchain quirks). The
+        # linker may then bind stale object code → subtle crashes (e.g. tests pass
+        # only after a clean .build). Rebuild the archive from scratch every time.
+        if os.path.isfile(output_file):
+            try:
+                os.remove(output_file)
+            except OSError:
+                pass
+
         cmd = [self.ar, "rcs", output_file]
         if ar_flags:
             cmd.extend(ar_flags.split())

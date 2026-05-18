@@ -1,10 +1,9 @@
 import os
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from insurgent.build.build import build
 from insurgent.meta.config import load_config
 
 
@@ -26,6 +25,5 @@ def test_example():
 
     # Simplest approach: mock the build function completely
     with patch("insurgent.build.build.build", return_value=True):
-        config = load_config(str(config_path))
-        # Don't call the actual build function at all, just simulate its result
-        assert True
+        cfg = load_config(str(config_path))
+        assert cfg

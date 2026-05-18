@@ -4,13 +4,10 @@ InsurgeNT - A modern build system and shell
 
 import argparse
 import asyncio
-import datetime
 import os
 import shutil
 import sys
-from typing import Dict, List, Optional, Tuple
 
-from rich import print as rprint
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import (
@@ -21,26 +18,12 @@ from rich.progress import (
     TimeElapsedColumn,
 )
 from rich.prompt import Confirm, IntPrompt, Prompt
-from rich.syntax import Syntax
 from rich.theme import Theme
 
 from insurgent.build.BuildEngine import BuildEngine
-from insurgent.build.BuildTask import BuildTask
-from insurgent.build.ParallelBuildManager import ParallelBuildManager
-from insurgent.logging.logger import error, info, log, success, warning
-from insurgent.logging.terminal import *
-from insurgent.meta.config import load_config, validate_config
+from insurgent.meta.config import load_config
 from insurgent.meta.version import VERSION
-from insurgent.meta.version import about as version_about
 from insurgent.meta.version import help as print_help
-from insurgent.rich_utils import (
-    create_panel,
-    create_table,
-    print_panel,
-    print_styled,
-    print_table,
-    style_text,
-)
 from insurgent.shell.shell import ShellInterface
 
 __version__ = VERSION
@@ -382,26 +365,26 @@ async def run_build(args):
         "silent": args.silent,
         "build_subprojects": args.build_subprojects,
     }
-    success, _ = await engine.build(**build_kwargs)
-    return 0 if success else 1
+    build_ok, _ = await engine.build(**build_kwargs)
+    return 0 if build_ok else 1
 
 
 async def run_clean():
     engine = BuildEngine(os.getcwd())
-    success = await engine.clean()
-    if not success:
+    clean_ok = await engine.clean()
+    if not clean_ok:
         console = Console(theme=INSURGENT_THEME)
         console.print("[error]Error: No project.yaml found in current directory.[/]")
         console.print("[prompt]Run `insurgent init` first.[/]")
-    return 0 if success else 1
+    return 0 if clean_ok else 1
 
 
 async def run_rebuild():
     """Clean and rebuild the project."""
     engine = BuildEngine(os.getcwd())
     if await engine.clean():
-        success, _ = await engine.build()
-        return 0 if success else 1
+        build_ok, _ = await engine.build()
+        return 0 if build_ok else 1
     return 1
 
 
